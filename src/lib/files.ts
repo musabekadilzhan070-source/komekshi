@@ -99,3 +99,12 @@ export async function signedFileUrl(path: string, download?: string): Promise<st
 export async function removeTaskFiles(paths: string[]) {
   if (paths.length) await supabaseBrowser().storage.from(TASK_BUCKET).remove(paths);
 }
+
+/** Тапсырманы көшіргенде материалды жаңа жолға көшіру (түпнұсқа файлға әсер етпеу үшін) */
+export async function copyTaskFile(fromPath: string, uid: string, folder: string): Promise<string> {
+  const name = fromPath.split('/').pop() ?? 'file';
+  const to = `${uid}/${folder}/${name}`;
+  const { error } = await supabaseBrowser().storage.from(TASK_BUCKET).copy(fromPath, to);
+  if (error) throw error;
+  return to;
+}

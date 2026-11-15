@@ -7,9 +7,9 @@ import {
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { must, useLoad } from '@/lib/hooks';
 import { humanError } from '@/lib/errors';
-import { addDays, MONTHS, periodOf, periodWeekLabel, todayISO, weeksInMonth } from '@/lib/date';
+import { addDays, daysBetween, MONTHS, periodOf, periodWeekLabel, todayISO, weeksInMonth } from '@/lib/date';
 import { PRIORITY, QUESTION_TYPE, TASK_KIND } from '@/lib/labels';
-import { removeTaskFiles } from '@/lib/files';
+import { copyTaskFile, removeTaskFiles } from '@/lib/files';
 import type { Priority, QuestionDraft, QuestionType, Task, TaskKind } from '@/lib/types';
 import { useAccount } from '@/components/shell/account-context';
 import { Modal } from '@/components/ui/modal';
@@ -44,52 +44,61 @@ function Section({ title, children, hint }: { title: string; hint?: string; chil
 type Existing = Task & {
   task_attachments: FileMeta[];
   test_questions: Parameters<typeof rowToDraft>[0][];
-  task_submissions: { student_id: string }[];
-  test_attempts: { id: string }[];
+  task_submissions: { id: string; student_id: string; status: string; answer_text: string | null; answer_data: unknown }[];
+  test_attempts: { id: string; finished_at: string | null; test_version: number }[];
 };
 
 /** Тапсырма редакторы: құру және өңдеу */
 export function TaskEditorModal({
-  students, preselected = [], editId, onClose, onSaved,
+  students, preselected = [], editId, copyId, onClose, onSaved,
 }: {
-  students: { id: string; full_name: string }[]; preselected?: string[]; editId?: string;
+  students: { id: string; full_name: string }[]; preselected?: string[]; editId?: string; copyId?: string;
   onClose: () => void; onSaved: () => void;
 }) {
   const me = useAccount();
-  const { data: existing, loading, error } = useLoad(async () => {
-    if (!editId) return null;
+  const srcId = editId ?? copyId;
+  const { data: loaded, loading, error } = useLoad(async () => {
+    if (!srcId) return null;
     const res = await supabaseBrowser().from('tasks')
-      .select('*, task_attachments(*), test_questions(*), task_submissions(student_id), test_attempts(id)')
-      .eq('id', editId).order('sort_order', { referencedTable: 'test_questions' }).single();
-    return must(res) as Existing;
-  }, [editId]);
+      .select('*, task_attachments(*), test_questions(*), task_submissions(id, student_id, status, answer_text, answer_data), test_attempts(id, finished_at, test_version)')
+      .eq('id', srcId).order('sort_order', { referencedTable: 'test_questions' }).single();
+    const t = must(res) as Existing;
+    // Тек ағымдағы нұсқаның сұрақтары (бұрынғы нұсқалар нәтижелер тарихында сақталады)
+    return { ...t, test_questions: t.test_questions.filter((q) => (q as { version?: number }).version === t.test_version) };
+  }, [srcId]);
 
-  if (editId && (loading || error || !existing)) {
+  if (srcId && (loading || error || !loaded)) {
     return (
-      <Modal open onClose={onClose} size="xl" title="Тапсырманы өңдеу">
+      <Modal open onClose={onClose} size="xl" title={editId ? 'Тапсырманы өзгерту' : 'Тапсырманы көшіру'}>
         {error ? <p className="text-sm text-bad">{error}</p> : <LoadingBlock rows={4} />}
       </Modal>
     );
   }
-  return <EditorForm uid={me.id} students={students} preselected={preselected} existing={existing} onClose={onClose} onSaved={onSaved} />;
+  return (
+    <EditorForm uid={me.id} students={students} preselected={preselected}
+      existing={editId ? loaded : null} source={copyId ? loaded : null} onClose={onClose} onSaved={onSaved} />
+  );
 }
 
 function EditorForm({
-  uid, students, preselected, existing, onClose, onSaved,
+  uid, students, preselected, existing, source, onClose, onSaved,
 }: {
   uid: string; students: { id: string; full_name: string }[]; preselected: string[]; existing: Existing | null;
-  onClose: () => void; onSaved: () => void;
+  source?: Existing | null; onClose: () => void; onSaved: () => void;
 }) {
   const toast = useToast();
   const today = todayISO();
   const folder = useRef(`att-${crypto.randomUUID().slice(0, 8)}`).current;
   const edit = !!existing;
+  const base = existing ?? source ?? null;
 
-  const [kind, setKind] = useState<TaskKind>(existing?.kind ?? 'written');
+  const [kind, setKind] = useState<TaskKind>(base?.kind ?? 'written');
   const [f, setF] = useState({
-    title: existing?.title ?? '', description: existing?.description ?? '', instructions: existing?.instructions ?? '',
-    start: existing?.start_date ?? today, due: existing?.due_date ?? addDays(today, 7),
-    priority: (existing?.priority ?? 'medium') as Priority, url: existing?.external_url ?? '',
+    title: existing ? existing.title : source ? `${source.title} (көшірме)`.slice(0, 200) : '',
+    description: base?.description ?? '', instructions: base?.instructions ?? '',
+    start: existing?.start_date ?? today,
+    due: existing?.due_date ?? (source ? addDays(today, Math.max(1, daysBetween(source.start_date, source.due_date))) : addDays(today, 7)),
+    priority: (base?.priority ?? 'medium') as Priority, url: base?.external_url ?? '',
   });
   const [period, setPeriod] = useState(() => existing
     ? { year: existing.period_year, month: existing.period_month, week: existing.period_week }
@@ -107,22 +116,32 @@ function EditorForm({
     const y = new Date().getFullYear();
     return Array.from(new Set([y - 1, y, y + 1, period.year])).sort();
   }, [period.year]);
-  const [questions, setQuestions] = useState<string[]>(existing?.config?.questions ?? ['']);
-  const [columns, setColumns] = useState<string[]>(existing?.config?.columns ?? ['', '']);
-  const [rows, setRows] = useState<number>(existing?.config?.rows ?? 5);
-  const [test, setTest] = useState<QuestionDraft[]>(() => (existing?.test_questions ?? []).map(rowToDraft));
+  const [questions, setQuestions] = useState<string[]>(base?.config?.questions ?? ['']);
+  const [columns, setColumns] = useState<string[]>(base?.config?.columns ?? ['', '']);
+  const [rows, setRows] = useState<number>(base?.config?.rows ?? 5);
+  const [test, setTest] = useState<QuestionDraft[]>(() => (base?.test_questions ?? []).map(rowToDraft));
   const [testDirty, setTestDirty] = useState(false);
-  const [minutes, setMinutes] = useState<number | null>(existing?.time_limit_minutes ?? null);
+  const [minutes, setMinutes] = useState<number | null>(base?.time_limit_minutes ?? null);
   const [builder, setBuilder] = useState(false);
-  const [files, setFiles] = useState<FileMeta[]>(existing?.task_attachments ?? []);
+  // Көшіру кезінде түпнұсқа материалдар — «copied» белгісімен (сақтағанда жаңа жолға көшіріледі)
+  const [files, setFiles] = useState<(FileMeta & { copied?: boolean })[]>(
+    existing?.task_attachments ?? (source?.task_attachments ?? []).map(({ storage_path, file_name, mime_type, size_bytes }) => ({ storage_path, file_name, mime_type, size_bytes, copied: true })));
   const [removed, setRemoved] = useState<FileMeta[]>([]);
   const [uploaded, setUploaded] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const assigned = useMemo(() => existing?.task_submissions.map((s) => s.student_id) ?? [], [existing]);
-  const [ids, setIds] = useState<string[]>(edit ? [] : preselected);
+  const [ids, setIds] = useState<string[]>(edit ? assigned : source ? source.task_submissions.map((s) => s.student_id).filter((id) => students.some((x) => x.id === id)) : preselected);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const locked = (existing?.test_attempts.length ?? 0) > 0;
+  const [retake, setRetake] = useState(false);
+  const attempts = existing?.test_attempts ?? [];
+  const finishedCount = attempts.filter((a) => a.finished_at).length;
+  const started = attempts.length > 0;
+  // Түрін өзгерту: оқушылардың ешқайсысы бастамаған болса ғана
+  const kindLocked = edit && (started || existing!.task_submissions.some((s) => s.status !== 'new' || s.answer_text || s.answer_data));
+  const addIds = edit ? ids.filter((id) => !assigned.includes(id)) : ids;
+  const removeIds = edit ? assigned.filter((id) => !ids.includes(id)) : [];
+  const nameOf = (id: string) => students.find((x) => x.id === id)?.full_name ?? 'Оқушы';
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => { setErr(null); setF((s) => ({ ...s, [k]: v })); };
 
@@ -145,7 +164,7 @@ function EditorForm({
     if (kind === 'questions' && !questions.some((q) => q.trim())) return 'Кемінде бір сұрақ жазыңыз.';
     if (kind === 'table' && (!columns.some((c) => c.trim()) || rows < 1 || rows > 50)) return 'Кесте бағандарын және жол санын (1–50) көрсетіңіз.';
     if (kind === 'test' && test.length === 0) return 'Тест құрастырыңыз: кемінде бір сұрақ қосыңыз.';
-    if (!edit && ids.length === 0) return 'Кемінде бір оқушыны таңдаңыз.';
+    if (ids.length === 0) return edit ? 'Кемінде бір оқушы қалуы керек. Тапсырманы толық алып тастау үшін «Тапсырманы өшіру» әрекетін қолданыңыз.' : 'Кемінде бір оқушыны таңдаңыз.';
     if (uploading) return 'Файлдар жүктеліп жатыр, күте тұрыңыз.';
     return null;
   };
@@ -163,15 +182,22 @@ function EditorForm({
     const qPayload = kind === 'test' ? test.map(draftToPayload) : null;
     try {
       if (!edit) {
-        const res = await sb.rpc('create_task_v2', {
-          p_task: task, p_students: ids, p_questions: qPayload,
-          p_attachments: files.map(({ storage_path, file_name, mime_type, size_bytes }) => ({ storage_path, file_name, mime_type, size_bytes })),
-        });
+        // Көшірілген материалдарды жаңа жолға көшіреміз
+        const atts = [];
+        for (const x of files) {
+          const path = x.copied ? await copyTaskFile(x.storage_path, uid, folder) : x.storage_path;
+          if (x.copied) setUploaded((s) => [...s, path]);
+          atts.push({ storage_path: path, file_name: x.file_name, mime_type: x.mime_type, size_bytes: x.size_bytes });
+        }
+        const res = await sb.rpc('create_task_v2', { p_task: task, p_students: ids, p_questions: qPayload, p_attachments: atts });
         if (res.error) throw res.error;
         toast.success(`Тапсырма ${ids.length} оқушыға берілді`);
       } else {
+        const kindChanged = kind !== existing!.kind;
         const res = await sb.rpc('update_task_v2', {
-          p_task_id: existing!.id, p_task: task, p_questions: testDirty ? qPayload : null, p_add_students: ids.length ? ids : null,
+          p_task_id: existing!.id, p_task: task, p_questions: kind === 'test' && (testDirty || kindChanged) ? qPayload : null,
+          p_add_students: addIds.length ? addIds : null, p_remove_students: removeIds.length ? removeIds : null,
+          p_retake: retake,
         });
         if (res.error) throw res.error;
         const added = files.filter((x) => !x.id);
@@ -184,7 +210,10 @@ function EditorForm({
           if (r.error) throw r.error;
           await removeTaskFiles(removed.map((x) => x.storage_path));
         }
-        toast.success('Тапсырма жаңартылды');
+        const r = res.data as { new_version?: boolean; retaken?: number } | null;
+        toast.success(r?.new_version
+          ? (r.retaken ? `Тесттің жаңа нұсқасы сақталды. ${r.retaken} оқушы қайта тапсырады` : 'Тесттің жаңа нұсқасы сақталды. Бұрынғы нәтижелер тарихта қалды')
+          : 'Өзгерістер сақталды. Оқушы кабинетінде жаңартылды');
       }
       setSaving(false);
       onSaved();
@@ -203,22 +232,22 @@ function EditorForm({
   return (
     <>
       <Modal
-        open onClose={cancel} size="xl" title={edit ? 'Тапсырманы өңдеу' : 'Жаңа тапсырма'}
-        subtitle={edit ? TASK_KIND[kind].label : 'Түрін таңдап, мазмұнын толтырыңыз'}
+        open onClose={cancel} size="xl" title={edit ? 'Тапсырманы өзгерту' : source ? 'Тапсырманы көшіру' : 'Жаңа тапсырма'}
+        subtitle={edit ? `${TASK_KIND[kind].label} · ${assigned.length} оқушы` : source ? 'Көшірменің параметрлерін тексеріп, оқушыларды таңдаңыз' : 'Түрін таңдап, мазмұнын толтырыңыз'}
         footer={<>
-          <Button variant="secondary" onClick={cancel}>Бас тарту</Button>
+          <Button variant="secondary" onClick={cancel} data-testid="task-cancel">Болдырмау</Button>
           <Button onClick={save} loading={saving} disabled={uploading} data-testid="task-save"><Send className="size-4" /> {edit ? 'Сақтау' : kind === 'test' ? 'Сақтау және оқушыға жіберу' : 'Тапсырма беру'}</Button>
         </>}
       >
         <div className="space-y-7">
-          {!edit && (
-            <Section title="Тапсырма түрі">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Тапсырма түрі">
+          {(
+            <Section title="Тапсырма түрі" hint={kindLocked ? 'Оқушылар тапсырманы орындай бастаған — түрін өзгертуге болмайды. Қалған параметрлердің бәрін өзгертуге болады.' : undefined}>
+              <div className={clsx('grid grid-cols-2 gap-2 sm:grid-cols-3', kindLocked && 'pointer-events-none opacity-60')} role="radiogroup" aria-label="Тапсырма түрі" aria-disabled={kindLocked || undefined}>
                 {KINDS.map((k) => {
                   const Icon = KIND_ICON[k];
                   const on = kind === k;
                   return (
-                    <button key={k} type="button" role="radio" aria-checked={on} onClick={() => { setErr(null); setKind(k); }}
+                    <button key={k} type="button" role="radio" aria-checked={on} disabled={kindLocked} onClick={() => { setErr(null); setKind(k); }}
                       data-testid={`kind-${k}`}
                       className={clsx('flex items-center gap-2.5 rounded-2xl p-3 text-left ring-1 transition',
                         on ? 'bg-brand-900 text-white ring-brand-900' : 'bg-white ring-line hover:ring-brand-300')}>
@@ -290,12 +319,22 @@ function EditorForm({
                     {minutes && <Badge tone="info">{minutes} минут</Badge>}
                     {testSummary.byType.map(([t, n]) => <Badge key={t}>{QUESTION_TYPE[t].label}: {n}</Badge>)}
                   </div>
-                  {locked && <p className="mt-2 text-xs text-warn">Оқушылар тапсыра бастаған — сұрақтарды өзгертуге болмайды.</p>}
+                  {started && <p className="mt-2 text-xs text-muted">Тестті {attempts.length} оқушы бастаған. Сұрақтарды өзгертсеңіз, тесттің жаңа нұсқасы сақталады, ал бұрынғы нәтижелер тарих ретінде қалады.</p>}
                 </div>
                 <Button variant={test.length ? 'secondary' : 'primary'} onClick={() => setBuilder(true)} data-testid="open-builder">
-                  <ListChecks className="size-4" /> {test.length ? (locked ? 'Сұрақтарды көру' : 'Тестті өңдеу') : 'Тест құрастыру'}
+                  <ListChecks className="size-4" /> {test.length ? 'Сұрақтарды өзгерту' : 'Тест құрастыру'}
                 </Button>
               </div>
+              {edit && testDirty && finishedCount > 0 && (
+                <div className="space-y-2 rounded-2xl bg-warn-soft p-4 text-sm" data-testid="version-note">
+                  <p className="font-bold text-ink">Тесттің жаңа нұсқасы сақталады</p>
+                  <p className="text-xs text-ink/80">{finishedCount} оқушы бұрынғы нұсқаны тапсырып қойған. Олардың нәтижелері жойылмайды.</p>
+                  <label className="flex cursor-pointer items-start gap-2.5 text-[13px] font-semibold text-ink">
+                    <input type="checkbox" checked={retake} onChange={(e) => setRetake(e.target.checked)} className="mt-0.5 size-4 accent-brand-900" data-testid="retake" />
+                    Тапсырған оқушыларға жаңа нұсқаны қайта тапсыруға жіберу (бұрынғы нәтиже тарихта сақталады)
+                  </label>
+                </div>
+              )}
             </Section>
           )}
 
@@ -305,7 +344,7 @@ function EditorForm({
             <FileList files={files} compact onRemove={(m) => {
               setFiles((s) => s.filter((x) => x.storage_path !== m.storage_path));
               if (m.id) setRemoved((s) => [...s, m]);
-              else { removeTaskFiles([m.storage_path]); setUploaded((s) => s.filter((p) => p !== m.storage_path)); }
+              else if (uploaded.includes(m.storage_path)) { removeTaskFiles([m.storage_path]); setUploaded((s) => s.filter((p) => p !== m.storage_path)); }
             }} />
           </Section>
 
@@ -343,17 +382,23 @@ function EditorForm({
             </div>
           </Section>
 
-          <Section title={edit ? 'Қосымша оқушылар' : 'Оқушылар'} hint={edit ? 'Тағайындалған оқушылар белгіленген. Жаңаларын қосуға болады.' : 'Бір немесе бірнеше оқушыға бір мезетте'}>
-            <Field group label="Оқушылар" required={!edit}>
-              <StudentMultiSelect students={students} value={ids} disabledIds={assigned} onChange={(v) => { setErr(null); setIds(v); }} />
+          <Section title="Тағайындалған оқушылар" hint={edit ? 'Белгіні алып тастасаңыз, тапсырма сол оқушыдан алынады (нәтижесі архивте сақталады). Жаңа оқушы қосуға болады.' : 'Бір немесе бірнеше оқушыға бір мезетте'}>
+            <Field group label="Оқушылар" required>
+              <StudentMultiSelect students={students} value={ids} onChange={(v) => { setErr(null); setIds(v); }} />
             </Field>
+            {edit && (addIds.length > 0 || removeIds.length > 0) && (
+              <div className="space-y-1 rounded-2xl bg-mist px-4 py-3 text-xs text-ink" data-testid="students-diff">
+                {addIds.length > 0 && <p><b>Қосылады:</b> {addIds.map(nameOf).join(', ')}</p>}
+                {removeIds.length > 0 && <p className="text-bad"><b>Алынады:</b> {removeIds.map(nameOf).join(', ')}</p>}
+              </div>
+            )}
           </Section>
 
           {err && <p role="alert" className="rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad">{err}</p>}
         </div>
       </Modal>
       {builder && (
-        <TestBuilder uid={uid} initial={test} initialMinutes={minutes} locked={locked}
+        <TestBuilder uid={uid} initial={test} initialMinutes={minutes}
           onClose={() => setBuilder(false)}
           onSave={(qs, m) => { setTest(qs); setMinutes(m); setTestDirty(true); setBuilder(false); setErr(null); }} />
       )}

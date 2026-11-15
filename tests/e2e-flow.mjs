@@ -174,32 +174,62 @@ await step('Оқушы кабинеті ашылады', async () => {
   await S.p.waitForURL('**/student');
 });
 
-await step('Оқушы жоспар құрады', async () => {
+await step('Оқушы жоспар құрады: әр жоспар жеке жолақ, уақыт бойынша реттеледі', async () => {
   await S.p.goto(`${BASE}/student/plan`);
-  await S.p.getByRole('button', { name: /^Жоспар$/ }).click();
-  await S.p.getByLabel(/Жоспар атауы/).fill('Алгебра: квадрат теңдеулер');
-  await S.p.getByLabel(/Тапсырма сипаттамасы/).fill('Оқулықтың 45–47 беттері, 10 есеп');
-  await S.p.getByLabel('Басталуы').fill('16:00');
-  await S.p.getByLabel('Аяқталуы').fill('17:30');
-  await S.p.getByLabel('Маңыздылығы').selectOption('high');
-  await S.p.getByRole('dialog').getByRole('button', { name: 'Сақтау' }).click();
-  await toast(S.p, /Жоспар қосылды/);
-  await S.p.getByText('Алгебра: квадрат теңдеулер').first().waitFor();
+  const addPlan = async (title, start, end, extra) => {
+    await S.p.getByTestId('plan-add').click();
+    const d = S.p.getByRole('dialog');
+    await d.getByLabel(/Жоспар атауы/).fill(title);
+    await d.getByLabel('Басталуы').fill(start);
+    await d.getByLabel('Аяқталуы').fill(end);
+    if (extra) await extra(d);
+    await d.getByTestId('plan-save').click();
+    await toast(S.p, /Жоспар қосылды/);
+  };
+  await addPlan('Алгебра: квадрат теңдеулер', '16:00', '17:30', async (d) => {
+    await d.getByLabel(/Сипаттамасы/).fill('Оқулықтың 45–47 беттері, 10 есеп');
+    await d.getByLabel('Маңыздылығы').selectOption('high');
+  });
+  await addPlan('Таңғы қайталау', '09:00', '09:30', async (d) => {
+    await d.getByLabel(/Қосымша ескертпе/).fill('Қате сұрақтарды дәптерге жаз');
+  });
+  const strips = S.p.getByTestId('plan-strip');
+  await strips.nth(1).getByText('Алгебра: квадрат теңдеулер').waitFor();
+  // уақыт бойынша реттелген: 09:00 бірінші
+  await strips.first().getByText('Таңғы қайталау').waitFor();
+  await strips.first().getByText('Қате сұрақтарды дәптерге жаз').waitFor();
+  await strips.first().getByTestId('plan-creator').getByText('Оқушы жасаған').waitFor();
+  await strips.first().getByTestId('plan-done').click();
+  await toast(S.p, /орындалды деп белгіленді/);
+  await strips.first().getByTestId('plan-status').getByText('Орындалды').waitFor();
+  await S.p.getByTestId('plan-progress').getByText('1/2 орындалды').waitFor();
 });
 
-await step('Куратор оқушы күнтізбесіне жоспар қосады → оқушыда пайда болады', async () => {
+await step('Куратор оқушы күнтізбесіне жоспар қосады → оқушыда бірден пайда болады, кураторда оқушы жоспарлары көрінеді', async () => {
   await A.p.goto(`${BASE}/curator/students`);
   await A.p.getByText(STU.name, { exact: true }).first().click();
   await A.p.waitForURL('**/curator/students/**');
   await A.p.getByText('Алгебра: квадрат теңдеулер').first().waitFor();
-  await A.p.getByRole('button', { name: /^Жоспар$/ }).click();
-  await A.p.getByLabel(/Жоспар атауы/).fill('Қазақ әдебиеті: Абай өлеңдері');
-  await A.p.getByRole('dialog').getByRole('button', { name: 'Сақтау' }).click();
-  await toast(A.p, /оқушының күнтізбесіне қосылды/);
+  await A.p.getByTestId('plan-add').click();
+  const d = A.p.getByRole('dialog');
+  await d.getByLabel(/Жоспар атауы/).fill('Қазақ әдебиеті: Абай өлеңдері');
+  await d.getByLabel('Басталуы').fill('14:00');
+  await d.getByLabel('Аяқталуы').fill('14:30');
+  await d.getByLabel(/Қосымша ескертпе/).fill('3 өлеңді жатта');
+  await d.getByTestId('plan-save').click();
+  await toast(A.p, /оқушының кабинетіне қосылды/);
+  await A.p.getByTestId('plan-strip').nth(1).getByText('Қазақ әдебиеті: Абай өлеңдері').waitFor();
   await shot(A.p, '11-curator-student-plan');
-  await S.p.locator('main').getByText('Қазақ әдебиеті: Абай өлеңдері').first().waitFor({ timeout: 10000 });
-  await S.p.locator('main').getByText('Куратор жасаған', { exact: true }).first().waitFor();
+  const strip = S.p.getByTestId('plan-strip').filter({ hasText: 'Қазақ әдебиеті: Абай өлеңдері' });
+  await strip.waitFor({ timeout: 10000 });
+  await strip.getByTestId('plan-creator').getByText('Куратор жасаған').waitFor();
+  await strip.getByText('3 өлеңді жатта').waitFor();
+  // ретпен: 09:00, 14:00, 16:00
+  await S.p.getByTestId('plan-strip').nth(1).getByText('Қазақ әдебиеті: Абай өлеңдері').waitFor();
   await shot(S.p, '12-student-plan');
+  await S.p.setViewportSize({ width: 390, height: 844 });
+  await shot(S.p, '12m-student-plan-mobile');
+  await S.p.setViewportSize({ width: 1440, height: 900 });
 });
 
 await step('Куратор тапсырма береді', async () => {
@@ -298,9 +328,12 @@ await step('Оқушы материалды ашады, тест тапсыра�
   const d = S.p.getByRole('dialog');
   await d.getByText('sabak.pdf').waitFor();
   await d.getByRole('button', { name: 'sabak.pdf ашу' }).click();
-  await S.p.getByRole('dialog').last().locator('iframe').waitFor();
+  await S.p.getByTestId('pdf-viewer').waitFor();
+  await S.p.getByTestId('pdf-page-count').getByText('/ 1').waitFor({ timeout: 20000 });
+  await S.p.locator('.pdfViewer .page canvas').first().waitFor({ timeout: 20000 });
   await shot(S.p, '13c-student-pdf-preview');
   await S.p.keyboard.press('Escape');
+  await S.p.getByTestId('pdf-viewer').waitFor({ state: 'detached' });
   await d.getByTestId('start-test').click();
   const r = S.p.getByRole('dialog').last();
   await r.getByRole('timer').waitFor();
@@ -345,7 +378,7 @@ await step('Оқушы материалды ашады, тест тапсыра�
 
 await step('Бетті жаңартқанда тест нәтижесі сақталады; куратор нәтижені көріп қабылдайды', async () => {
   await S.p.reload();
-  await S.p.getByRole('tab', { name: /Тексеруді күтуде/ }).click();
+  await S.p.getByRole('tab', { name: /Тексерілуде/ }).click();
   await S.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().waitFor();
   await S.p.locator('main').getByText('5/6 · 83%').waitFor();
   await A.p.goto(`${BASE}/curator/tasks`);
@@ -371,7 +404,7 @@ await step('Кесте толтыру тапсырмасы: оқушы кест�
   await toast(A.p, /Тапсырма 1 оқушыға берілді/);
 
   await S.p.goto(`${BASE}/student/tasks`);
-  await S.p.getByRole('tab', { name: /Орындалатын/ }).click();
+  await S.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
   await S.p.locator('main').getByText('Хандар кестесі').first().click();
   const s = S.p.getByRole('dialog');
   await s.getByLabel('1-жол, Хан').fill('Абылай');
@@ -554,12 +587,12 @@ await step('Ай мен апта: куратор кезең таңдайды →
   await toast(A.p, /Тапсырма 2 оқушыға берілді/);
 
   await S.p.goto(`${BASE}/student/tasks`);
-  await S.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await S.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
   const cards = S.p.getByTestId('submission-card');
   await cards.first().waitFor();
   const all = await cards.count();
   await S.p.getByTestId('filter-month').selectOption({ label: 'Қазан 2026' });
-  await cards.filter({ hasText: 'Қазақ хандығы тақырыбын қайталау' }).getByText('Қазан, 3-апта').waitFor();
+  await cards.filter({ hasText: 'Қазақ хандығы тақырыбын қайталау' }).getByText('Қазан, 3-апта').locator('visible=true').first().waitFor();
   if ((await cards.count()) !== 1) throw new Error('Қазан айында тек 1 тапсырма болуы керек');
   await S.p.getByTestId('filter-week').selectOption('3');
   if ((await cards.count()) !== 1) throw new Error('3-аптада 1 тапсырма болуы керек');
@@ -619,7 +652,7 @@ await step('Тест импорттау: DOCX → алдын ала қарау �
   await toast(A.p, /Тапсырма 2 оқушыға берілді/);
 
   await S.p.goto(`${BASE}/student/tasks`);
-  await S.p.getByRole('tab', { name: /Орындалатын/ }).click();
+  await S.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
   await S.p.locator('main').getByText('Импорт тесті (DOCX)').first().click();
   await S.p.getByRole('dialog').getByTestId('start-test').click();
   const r = S.p.getByRole('dialog').last();
@@ -639,6 +672,123 @@ await step('Тест импорттау: DOCX → алдын ала қарау �
   await r.getByRole('button', { name: 'Жабу' }).last().click();
 });
 
+await step('Куратор тапсырманы ашады, толық өзгертеді (атауы, апта, файл, тест) → оқушыда жаңарады, нәтиже тарихта; көшіреді', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('tab', { name: 'Мен берген тапсырмалар' }).click();
+  const card = () => A.p.getByTestId('catalog-task').filter({ hasText: 'Импорт тесті (DOCX)' }).first();
+  // Ашу
+  await card().getByRole('button', { name: /әрекеттері/ }).click();
+  await A.p.getByTestId('task-open').click();
+  const det = A.p.getByTestId('task-detail');
+  await det.getByText(STU.name).waitFor();
+  await det.getByText('4 сұрақ · 4 ұпай').waitFor();
+  await shot(A.p, '33-task-detail');
+  await A.p.keyboard.press('Escape');
+  await det.waitFor({ state: 'detached' });
+
+  // Өзгерту
+  await card().getByRole('button', { name: /әрекеттері/ }).click();
+  await A.p.getByTestId('task-edit').click();
+  const d = A.p.getByRole('dialog', { name: 'Тапсырманы өзгерту' });
+  await d.getByLabel(/Тапсырма атауы/).fill('Импорт тесті — 2-нұсқа');
+  await d.getByLabel(/Сипаттамасы/).fill('Тест жаңартылды: 3 сұрақ қалды.');
+  await d.getByTestId('period-week').selectOption('2');
+  await d.locator('input[type=file]').first().setInputFiles('./tests/fixtures/oqulyq.pdf');
+  await d.getByText('oqulyq.pdf').waitFor({ timeout: 20000 });
+  await d.getByTestId('open-builder').click();
+  const b = A.p.getByRole('dialog').last();
+  await b.getByTestId('question-card').last().getByRole('button', { name: 'Сұрақты өшіру' }).click();
+  await b.getByTestId('test-save').click();
+  await d.getByTestId('test-summary').getByText('3 сұрақ').waitFor();
+  await d.getByTestId('version-note').waitFor();
+  await d.getByTestId('retake').check();
+  await shot(A.p, '34-task-edit');
+  await d.getByRole('button', { name: 'Болдырмау' }).waitFor();
+  await d.getByTestId('task-save').click();
+  await toast(A.p, /жаңа нұсқасы сақталды/);
+  await card().waitFor({ state: 'detached' });
+  await A.p.getByTestId('catalog-task').filter({ hasText: 'Импорт тесті — 2-нұсқа' }).getByText(/2-апта/).waitFor();
+
+  // Оқушыда бірден жаңарады (бет қайта жүктелмейді)
+  await S.p.goto(`${BASE}/student/tasks`);
+  const sc = S.p.getByTestId('submission-card').filter({ hasText: 'Импорт тесті — 2-нұсқа' });
+  await sc.waitFor({ timeout: 15000 });
+  await sc.getByTestId('status-pill').getByText('Жаңа тапсырма').waitFor();
+  await sc.getByText('Тест жаңартылды: 3 сұрақ қалды.').waitFor();
+  await sc.getByTestId('open-task').click();
+  const sd = S.p.getByRole('dialog');
+  await sd.getByTestId('attempt-history').getByText('3/4').waitFor();
+  // PDF Reader: экран еніне сәйкес ашылады
+  await sd.getByRole('button', { name: 'oqulyq.pdf ашу' }).click();
+  const v = S.p.getByTestId('pdf-viewer');
+  await v.getByTestId('pdf-page-count').getByText('/ 3').waitFor({ timeout: 20000 });
+  await S.p.locator('.pdfViewer .page canvas').first().waitFor({ timeout: 20000 });
+  await v.getByTestId('pdf-fit-width').and(S.p.locator('[aria-pressed=true]')).waitFor();
+  const fitW = await S.p.evaluate(() => {
+    const c = document.querySelector('[data-testid=pdf-scroll]'); const pg = document.querySelector('.pdfViewer .page');
+    return { over: c.scrollWidth - c.clientWidth, pw: pg.getBoundingClientRect().width, cw: c.clientWidth };
+  });
+  assert.ok(fitW.over <= 1 && fitW.pw > fitW.cw * 0.85, `PDF ені экранға сай емес: ${JSON.stringify(fitW)}`);
+  await S.p.locator('.pdfViewer .textLayer span').first().waitFor({ timeout: 20000 });
+  await shot(S.p, '35-pdf-reader-desktop');
+  await v.getByRole('button', { name: 'Келесі бет' }).click();
+  await S.p.waitForFunction(() => document.querySelector('[data-testid=pdf-page-input]').value === '2');
+  const z0 = await v.getByTestId('pdf-zoom').textContent();
+  await v.getByRole('button', { name: 'Үлкейту' }).click();
+  await S.p.waitForFunction((z) => document.querySelector('[data-testid=pdf-zoom]').textContent !== z, z0);
+  await v.getByTestId('pdf-fit-page').click();
+  await v.getByTestId('pdf-fit-page').and(S.p.locator('[aria-pressed=true]')).waitFor();
+  await v.getByTestId('pdf-page-input').fill('3');
+  await v.getByTestId('pdf-page-input').press('Enter');
+  await S.p.waitForFunction(() => document.querySelector('[data-testid=pdf-page-input]').value === '3');
+  await v.getByTestId('pdf-fullscreen').click();
+  await S.p.waitForTimeout(400);
+  await shot(S.p, '35b-pdf-reader-fullscreen');
+  await v.getByRole('button', { name: 'Жабу' }).click();
+  await v.waitFor({ state: 'detached' });
+  await sd.getByRole('button', { name: 'Жабу' }).first().click().catch(() => S.p.keyboard.press('Escape'));
+
+  // Телефонда PDF
+  const P = await ctx(true);
+  await login(P.p, STU);
+  await P.p.waitForURL('**/student');
+  await P.p.goto(`${BASE}/student/tasks`);
+  await P.p.getByTestId('submission-card').filter({ hasText: 'Импорт тесті — 2-нұсқа' }).getByTestId('open-task').click();
+  await P.p.getByRole('dialog').getByRole('button', { name: 'oqulyq.pdf ашу' }).click();
+  await P.p.locator('.pdfViewer .page canvas').first().waitFor({ timeout: 20000 });
+  await P.p.waitForTimeout(500);
+  const m = await P.p.evaluate(() => {
+    const c = document.querySelector('[data-testid=pdf-scroll]'); const pg = document.querySelector('.pdfViewer .page');
+    return { over: c.scrollWidth - c.clientWidth, pw: pg.getBoundingClientRect().width, cw: c.clientWidth, vw: window.innerWidth };
+  });
+  assert.ok(m.over <= 1 && m.pw > m.cw * 0.85 && m.pw <= m.vw, `Телефонда PDF ені: ${JSON.stringify(m)}`);
+  await shot(P.p, '35c-pdf-reader-mobile');
+  await P.p.getByTestId('pdf-viewer').getByRole('button', { name: 'Жабу' }).click();
+  await P.p.keyboard.press('Escape');
+  await P.p.goto(`${BASE}/student/tasks`);
+  await P.p.waitForTimeout(600);
+  await shot(P.p, '36-mobile-task-cards');
+  await P.c.close();
+
+  // Көшіру
+  await A.p.getByTestId('catalog-task').filter({ hasText: 'Импорт тесті — 2-нұсқа' }).first().getByRole('button', { name: /әрекеттері/ }).click();
+  await A.p.getByTestId('task-copy').click();
+  const c = A.p.getByRole('dialog', { name: 'Тапсырманы көшіру' });
+  await c.getByLabel(/Тапсырма атауы/).fill('Импорт тесті — көшірме');
+  await c.getByTestId('test-summary').getByText('3 сұрақ').waitFor();
+  await c.getByText('oqulyq.pdf').waitFor();
+  await c.getByTestId('task-save').click();
+  await toast(A.p, /Тапсырма 2 оқушыға берілді/);
+  await A.p.getByTestId('catalog-task').filter({ hasText: 'Импорт тесті — көшірме' }).waitFor();
+  // түпнұсқа файл өзгермеді, көшірмеде де ашылады
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.getByTestId('submission-card').filter({ hasText: 'Импорт тесті — көшірме' }).getByTestId('open-task').click();
+  await S.p.getByRole('dialog').getByRole('button', { name: 'oqulyq.pdf ашу' }).click();
+  await S.p.getByTestId('pdf-page-count').getByText('/ 3').waitFor({ timeout: 20000 });
+  await S.p.getByTestId('pdf-viewer').getByRole('button', { name: 'Жабу' }).click();
+  await S.p.keyboard.press('Escape');
+});
+
 await step('Куратор тапсырманы бір оқушыдан, сосын бәрінен өшіреді → оқушыда жоғалады → организатор архивте көреді', async () => {
   await A.p.goto(`${BASE}/curator/tasks`);
   await A.p.getByRole('tab', { name: 'Мен берген тапсырмалар' }).click();
@@ -655,11 +805,11 @@ await step('Куратор тапсырманы бір оқушыдан, сос�
   await t.getByText(`${STU2.name} ·`).waitFor({ state: 'detached' });
 
   await S2.p.goto(`${BASE}/student/tasks`);
-  await S2.p.getByRole('tab', { name: /Барлығы/ }).click();
-  await S2.p.locator('main').getByText('Импорт тесті (DOCX)').first().waitFor();
+  await S2.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
+  await S2.p.locator('main').getByText('Импорт тесті — 2-нұсқа').first().waitFor();
   if (await S2.p.locator('main').getByText('Қазақ хандығы тақырыбын қайталау').count()) throw new Error('Өшірілген тапсырма оқушыда көрінбеуі керек');
   await S.p.goto(`${BASE}/student/tasks`);
-  await S.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await S.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
   await S.p.locator('main').getByText('Қазақ хандығы тақырыбын қайталау').first().waitFor();
 
   await t.getByRole('button', { name: /әрекеттері/ }).click();
@@ -706,7 +856,7 @@ await step('Мобильді нұсқа: оқушы кабинеті', async () 
     await shot(M.p, `26-mobile-${path}`);
   }
   await M.p.goto(`${BASE}/student/tasks`);
-  await M.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await M.p.getByRole('tab', { name: /Барлық тапсырмалар/ }).click();
   await M.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().click();
   await M.p.getByTestId('test-result').waitFor();
   await M.p.waitForTimeout(500);

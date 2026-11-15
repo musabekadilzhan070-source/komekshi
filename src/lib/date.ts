@@ -22,6 +22,10 @@ export function addDays(s: string, n: number): string {
   d.setDate(d.getDate() + n);
   return toISO(d);
 }
+/** Екі күн арасындағы күндер саны */
+export function daysBetween(a: string, b: string): number {
+  return Math.round((parseISO(b).getTime() - parseISO(a).getTime()) / 86400000);
+}
 export function mondayOf(s: string): string {
   const d = parseISO(s);
   const dow = (d.getDay() + 6) % 7;

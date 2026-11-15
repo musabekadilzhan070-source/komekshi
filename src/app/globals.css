@@ -17,12 +17,13 @@
   --color-sand-300: #E2D4D6;
   --color-sand-100: #F4F1F1;
 
-  --color-mist: #F6F6F6;
-  --color-mist-dark: #ECECEC;
+  --color-canvas: #F7F7F8;
+  --color-mist: #F1F1F2;
+  --color-mist-dark: #E8E8EA;
   --color-cream: #FFFFFF;
   --color-ink: #000000;
   --color-muted: #4B4B4B;
-  --color-line: #E7E7E7;
+  --color-line: #E8E8EA;
 
   --color-ok: #2F7D5B;
   --color-ok-soft: #E3F1EA;
@@ -36,14 +37,14 @@
   --radius-xl2: 1.25rem;
   --radius-xl3: 1.75rem;
 
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.10);
-  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.05), 0 18px 40px -16px rgba(0, 0, 0, 0.20);
+  --shadow-soft: 0 1px 2px rgba(16, 16, 24, 0.04);
+  --shadow-lift: 0 2px 4px rgba(16, 16, 24, 0.04), 0 12px 28px -14px rgba(16, 16, 24, 0.16);
 }
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
   body {
-    background: #FFFFFF;
+    background: var(--color-canvas);
     color: var(--color-ink);
     font-feature-settings: "liga" 1, "kern" 1;
     -webkit-font-smoothing: antialiased;

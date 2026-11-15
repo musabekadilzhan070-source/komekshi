@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:db": "node --test --test-concurrency=1 tests/db-security.test.mjs tests/db-tasks-v2.test.mjs tests/db-tasks-v3.test.mjs",
+    "test:db": "node --test --test-concurrency=1 tests/db-security.test.mjs tests/db-tasks-v2.test.mjs tests/db-tasks-v3.test.mjs tests/db-tasks-v4.test.mjs",
     "create-organizer": "node scripts/create-organizer.mjs"
   },
   "devDependencies": {

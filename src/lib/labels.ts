@@ -32,15 +32,15 @@ export const PRIORITY: Record<Priority, { label: string; tone: Tone }> = {
 
 export const PLAN_STATUS: Record<PlanStatus, { label: string; tone: Tone }> = {
   todo: { label: 'Орындалмаған', tone: 'neutral' },
-  in_progress: { label: 'Орындалып жатыр', tone: 'warn' },
+  in_progress: { label: 'Орындалуда', tone: 'warn' },
   done: { label: 'Орындалды', tone: 'ok' },
 };
 
 export const SUBMISSION_STATUS: Record<SubmissionStatus, { label: string; tone: Tone }> = {
   new: { label: 'Жаңа тапсырма', tone: 'info' },
   in_progress: { label: 'Орындалуда', tone: 'warn' },
-  pending_review: { label: 'Тексеруді күтуде', tone: 'brand' },
-  accepted: { label: 'Қабылданды', tone: 'ok' },
+  pending_review: { label: 'Тексерілуде', tone: 'brand' },
+  accepted: { label: 'Орындалды', tone: 'ok' },
   needs_revision: { label: 'Қайта орындау қажет', tone: 'bad' },
 };
 

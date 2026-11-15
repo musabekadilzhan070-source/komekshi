@@ -12,7 +12,7 @@ import type { Account } from '@/lib/types';
 import { AccountProvider } from './account-context';
 import { BellButton, NotificationRow, NotificationsProvider, useNotifications } from './notifications';
 import { Avatar } from '@/components/ui/misc';
-import { Logo } from './logo';
+import { LogoMark } from './logo';
 import { Ornament, OrnamentBand } from '@/components/ui/ornament';
 
 type Badges = Partial<Record<NonNullable<NavItem['badge']>, number>>;
@@ -93,8 +93,12 @@ function ShellInner({ account, children }: { account: Account; children: React.R
         {/* ---------- Сол жақ навигация (планшет және компьютер) ---------- */}
         <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] shrink-0 flex-col rounded-[28px] bg-brand-900 text-white md:my-4 md:ml-4 md:flex md:w-[84px] lg:my-0 lg:ml-0 lg:w-[248px]">
           <div className="flex h-20 items-center justify-center px-5 lg:justify-start">
-            <Link href={root} aria-label="KÓMEKSHI басты бет">
-              <Logo light compactOnTablet />
+            <Link href={root} aria-label="KÓMEKSHI басты бет" className="flex items-center gap-3">
+              <LogoMark light className="size-10" />
+              <span className="hidden min-w-0 lg:block">
+                <span className="block text-[13px] leading-tight font-extrabold tracking-[0.14em]">KÓMEKSHI</span>
+                <span className="block text-[11px] text-white/60">{CABINET[account.role]}</span>
+              </span>
             </Link>
           </div>
           <nav className="scrollbar-none flex-1 space-y-1 overflow-y-auto px-3 py-2" aria-label="Негізгі навигация">
@@ -158,7 +162,10 @@ function ShellInner({ account, children }: { account: Account; children: React.R
           <div className="min-w-0 flex-1">
             {/* Мобильді жоғарғы панель */}
             <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-line/70 bg-white/90 px-4 py-3 backdrop-blur md:hidden">
-              <Link href={root} aria-label="Басты бет"><Logo /></Link>
+              <Link href={root} aria-label="KÓMEKSHI басты бет" className="flex min-w-0 items-center gap-2.5">
+                <LogoMark className="size-9" />
+                <span className="truncate text-[13px] font-bold text-ink">{CABINET[account.role]}</span>
+              </Link>
               <div className="flex items-center gap-2">
                 <BellButton href={`${root}/notifications`} />
                 <Link href={`${root}/profile`} aria-label="Профиль"><Avatar name={account.full_name} size={40} /></Link>
@@ -258,6 +265,8 @@ function ShellInner({ account, children }: { account: Account; children: React.R
   );
 }
 
+const CABINET: Record<Account['role'], string> = { student: 'Оқушы кабинеті', curator: 'Куратор кабинеті', organizer: 'Организатор кабинеті' };
+
 function RightPanel({ account, root }: { account: Account; root: string }) {
   const { items, unread, markAll, loading } = useNotifications();
   return (
@@ -282,7 +291,7 @@ function RightPanel({ account, root }: { account: Account; root: string }) {
         )}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-cream p-4 shadow-soft">
+      <div className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-white p-4 ring-1 ring-line">
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-sm font-bold text-ink">
             Хабарламалар {unread > 0 && <span className="ml-1 rounded-full bg-brand-700 px-2 py-0.5 text-[10px] text-white">{unread}</span>}
@@ -296,14 +305,14 @@ function RightPanel({ account, root }: { account: Account; root: string }) {
             <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-14 rounded-2xl" />)}</div>
           ) : items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-              <Bell className="mb-2 size-6 text-white/75" />
+              <Bell className="mb-2 size-6 text-muted/60" />
               <p className="text-xs text-muted">Әзірге хабарлама жоқ</p>
             </div>
           ) : (
             items.slice(0, 12).map((n) => <NotificationRow key={n.id} n={n} compact />)
           )}
         </div>
-        <Link href={`${root}/notifications`} className="mt-2 rounded-2xl bg-white py-2.5 text-center text-xs font-semibold text-ink ring-1 ring-line hover:bg-brand-50">
+        <Link href={`${root}/notifications`} className="mt-2 rounded-2xl bg-mist py-2.5 text-center text-xs font-semibold text-ink hover:bg-mist-dark">
           Барлық хабарламалар
         </Link>
       </div>

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import clsx from 'clsx';
 import { Download, Eye, FileImage, FileSpreadsheet, FileText, FileType2, Paperclip, Presentation, Trash2, UploadCloud, X } from 'lucide-react';
 import {
@@ -9,6 +10,8 @@ import { humanError } from '@/lib/errors';
 import { Modal } from '@/components/ui/modal';
 import { Spinner } from '@/components/ui/misc';
 import { useToast } from '@/components/ui/toast';
+
+const PdfViewer = dynamic(() => import('./pdf-viewer'), { ssr: false });
 
 export interface FileMeta { id?: string; storage_path: string; file_name: string; mime_type: string; size_bytes: number }
 
@@ -157,13 +160,15 @@ function FilePreview({ file, onClose, onDownload }: { file: FileMeta; onClose: (
   useEffect(() => {
     signedFileUrl(file.storage_path).then(setUrl).catch((e) => setErr(humanError(e)));
   }, [file.storage_path]);
+  const subtitle = `${fileKindLabel(file.mime_type)} · ${formatSize(file.size_bytes)}`;
+  if (isPdf(file.mime_type) && url && !err) {
+    return <PdfViewer url={url} title={file.file_name} subtitle={subtitle} onClose={onClose} onDownload={onDownload} />;
+  }
   return (
-    <Modal open onClose={onClose} size="xl" title={file.file_name} subtitle={`${fileKindLabel(file.mime_type)} · ${formatSize(file.size_bytes)}`}
+    <Modal open onClose={onClose} size="xl" title={file.file_name} subtitle={subtitle}
       footer={<button type="button" onClick={onDownload} className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-900 px-6 text-sm font-semibold text-white"><Download className="size-4" /> Жүктеп алу</button>}>
       {err ? <p className="text-sm text-bad">{err}</p> : !url ? (
         <div className="flex h-64 items-center justify-center"><Spinner /></div>
-      ) : isPdf(file.mime_type) ? (
-        <iframe src={url} title={file.file_name} className="h-[70dvh] w-full rounded-2xl bg-white ring-1 ring-line" />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={file.file_name} className="mx-auto max-h-[70dvh] rounded-2xl object-contain" />

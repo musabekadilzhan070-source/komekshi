@@ -149,8 +149,7 @@ test('тест: құрастыру, жасырын жауаптар, бағал�
   // қайта тапсыру/қайта бастау мүмкін емес
   assert.ok((await stuA.rpc('submit_test', { p_submission: subA.id, p_answers: answers })).error);
   assert.ok((await stuA.rpc('start_test', { p_submission: subA.id })).error);
-  // нәтижелер бар тесттің сұрақтарын өзгертуге болмайды
-  assert.ok((await cur1.rpc('update_task_v2', { p_task_id: taskId, p_task: { title: 'Тарих тесті' }, p_questions: QUESTIONS })).error);
+  // нәтижелер бар тестті өзгерту енді жаңа нұсқа жасайды (db-tasks-v4 тестін қараңыз)
 
   // куратор қайта орындауға жібереді → оқушы қайта тапсырады
   ok(await cur1.from('task_submissions').update({ status: 'needs_revision', curator_comment: 'Қайта көр' }).eq('id', subA.id), 'rev');

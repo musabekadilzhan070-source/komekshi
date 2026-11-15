@@ -22,7 +22,7 @@ export default async function Landing() {
     <div className="min-h-dvh p-0 sm:p-4">
       <div className="mx-auto max-w-[1400px] overflow-hidden bg-cream sm:rounded-[32px] sm:shadow-lift">
         <header className="flex items-center justify-between gap-3 px-5 py-5 sm:px-10">
-          <Logo />
+          <Logo size="lg" />
           <nav className="flex items-center gap-2">
             {cabinet ? (
               <Link href={cabinet} className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-900 px-5 text-sm font-semibold text-white hover:bg-brand-800">

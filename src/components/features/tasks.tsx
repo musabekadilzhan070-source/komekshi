@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import {
-  CalendarClock, CalendarRange, CheckCircle2, ClipboardList, ExternalLink, ListChecks, MessageSquare, Pencil, Play, RotateCcw, Save, Trash2, Undo2,
+  CalendarClock, CalendarRange, CheckCircle2, ChevronRight, ClipboardList, Copy, Eye, History, ExternalLink, ListChecks, MessageSquare, Pencil, Play, RotateCcw, Save, Trash2, Undo2,
 } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { must, useLoad, useRealtime } from '@/lib/hooks';
@@ -23,13 +23,34 @@ import { KIND_ICON, TaskEditorModal } from './task-editor';
 import { AttachmentCount, FileList, FileUploader, type FileMeta } from './task-files';
 import { TestResultView, TestRunner } from './test-runner';
 
-type Filter = 'active' | 'review' | 'done' | 'all';
+type Filter = 'active' | 'review' | 'done' | 'all' | 'new' | 'progress';
 const FILTERS: Record<Filter, SubmissionStatus[] | null> = {
   active: ['new', 'in_progress', 'needs_revision'],
+  new: ['new'],
+  progress: ['in_progress', 'needs_revision'],
   review: ['pending_review'],
   done: ['accepted'],
   all: null,
 };
+const OPEN: SubmissionStatus[] = ['new', 'in_progress', 'needs_revision'];
+const isOverdue = (s: Pick<Submission, 'status'> & { tasks?: Pick<Task, 'due_date'> | null }) =>
+  OPEN.includes(s.status) && !!s.tasks && s.tasks.due_date < todayISO();
+
+/** Статус белгісі: түрлі түсті шағын белгі (мерзімі өткені бөлек көрсетіледі) */
+export function StatusPill({ status, overdue }: { status: SubmissionStatus; overdue?: boolean }) {
+  const st = overdue ? { label: 'Мерзімі өтіп кеткен', cls: 'bg-bad text-white', dot: 'bg-white' } : {
+    new: { label: 'Жаңа тапсырма', cls: 'bg-info-soft text-info', dot: 'bg-info' },
+    in_progress: { label: 'Орындалуда', cls: 'bg-warn-soft text-warn', dot: 'bg-warn' },
+    pending_review: { label: 'Тексерілуде', cls: 'bg-brand-100 text-brand-900', dot: 'bg-brand-700' },
+    accepted: { label: 'Орындалды', cls: 'bg-ok-soft text-ok', dot: 'bg-ok' },
+    needs_revision: { label: 'Қайта орындау қажет', cls: 'bg-bad-soft text-bad', dot: 'bg-bad' },
+  }[status];
+  return (
+    <span className={clsx('inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap', st.cls)} data-testid="status-pill">
+      <span className={clsx('size-1.5 rounded-full', st.dot)} />{st.label}
+    </span>
+  );
+}
 
 type Attempt = Pick<TestAttempt, 'score' | 'max_score' | 'finished_at'>;
 type Row = Submission & { test_attempts: Attempt | Attempt[] | null; task_attachments?: { id: string }[] };
@@ -52,7 +73,7 @@ export function SubmissionList({
 }: { studentId?: string; mode: 'student' | 'curator'; names?: Map<string, string>; defaultFilter?: Filter }) {
   const params = useSearchParams();
   const focusId = params.get('id') || params.get('review');
-  const [filter, setFilter] = useState<Filter>(defaultFilter);
+  const [filter, setFilter] = useState<Filter>(mode === 'student' ? 'all' : defaultFilter);
   const [openId, setOpenId] = useState<string | null>(null);
 
   const { data, error, loading, reload } = useLoad(async () => {
@@ -85,14 +106,17 @@ export function SubmissionList({
   }, [focusId, data]);
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { active: 0, review: 0, done: 0, all: scoped.length };
+    const c: Record<Filter, number> = { active: 0, new: 0, progress: 0, review: 0, done: 0, all: scoped.length };
     scoped.forEach((s) => (Object.keys(FILTERS) as Filter[]).forEach((f) => { if (FILTERS[f]?.includes(s.status)) c[f]++; }));
     return c;
   }, [scoped]);
 
+  // Ашық тапсырмалар алдымен (мерзімі жақыны жоғарыда), содан кейін тексерілетіндер мен орындалғандар
+  const rank = (x: Row) => (OPEN.includes(x.status) ? 0 : x.status === 'pending_review' ? 1 : 2);
   const list = scoped.filter((s) => !FILTERS[filter] || FILTERS[filter]!.includes(s.status))
-    .sort((a, b) => (a.tasks?.due_date ?? '').localeCompare(b.tasks?.due_date ?? ''));
-  const today = todayISO();
+    .sort((a, b) => rank(a) - rank(b) || (rank(a) === 2
+      ? (b.tasks?.due_date ?? '').localeCompare(a.tasks?.due_date ?? '')
+      : (a.tasks?.due_date ?? '').localeCompare(b.tasks?.due_date ?? '')));
   const open = data?.find((s) => s.id === openId) ?? null;
 
   return (
@@ -101,10 +125,16 @@ export function SubmissionList({
         className="mb-4"
         value={filter}
         onChange={setFilter}
-        items={[
-          { value: 'active', label: mode === 'student' ? 'Орындалатын' : 'Орындалуда', count: counts.active },
+        items={mode === 'student' ? [
+          { value: 'all', label: 'Барлық тапсырмалар', count: counts.all },
+          { value: 'new', label: 'Жаңа', count: counts.new },
+          { value: 'progress', label: 'Орындалуда', count: counts.progress },
+          { value: 'done', label: 'Орындалған', count: counts.done },
+          { value: 'review', label: 'Тексерілуде', count: counts.review },
+        ] : [
+          { value: 'active', label: 'Орындалуда', count: counts.active },
           { value: 'review', label: 'Тексеруді күтуде', count: counts.review },
-          { value: 'done', label: 'Қабылданған', count: counts.done },
+          { value: 'done', label: 'Орындалған', count: counts.done },
           { value: 'all', label: 'Барлығы', count: counts.all },
         ]}
       />
@@ -140,40 +170,10 @@ export function SubmissionList({
           text={mode === 'student' ? 'Куратор жаңа тапсырма бергенде осында пайда болады.' : 'Оқушыларға тапсырма беру үшін «Жаңа тапсырма» батырмасын басыңыз.'}
         />
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
-          {list.map((s) => {
-            const t = s.tasks!;
-            const overdue = ['new', 'in_progress', 'needs_revision'].includes(s.status) && t.due_date < today;
-            const nFiles = (t as Task & { task_attachments?: { id: string }[] }).task_attachments?.length ?? 0;
-            return (
-              <button
-                key={s.id}
-                onClick={() => setOpenId(s.id)}
-                data-testid="submission-card"
-                className="card group flex flex-col p-4 text-left transition-shadow hover:shadow-lift sm:p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 font-bold text-ink">{t.title}</p>
-                  <Badge tone={SUBMISSION_STATUS[s.status].tone}>{SUBMISSION_STATUS[s.status].label}</Badge>
-                </div>
-                {mode === 'curator' && names && (
-                  <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-brand-700">
-                    <Avatar name={names.get(s.student_id) ?? '?'} size={20} /> {names.get(s.student_id) ?? 'Оқушы'}
-                  </p>
-                )}
-                {t.description && <p className="mt-2 line-clamp-2 text-sm text-muted">{t.description}</p>}
-                <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
-                  <KindBadge kind={t.kind} />
-                  <Badge tone="neutral"><CalendarRange className="size-3" /> {MONTHS[t.period_month - 1]}, {t.period_week}-апта</Badge>
-                  <Badge tone={overdue ? 'bad' : 'neutral'}><CalendarClock className="size-3" /> {overdue ? 'Мерзімі өтті: ' : 'Мерзімі: '}{shortDate(t.due_date)}</Badge>
-                  <Badge tone={PRIORITY[t.priority].tone}>{PRIORITY[t.priority].label}</Badge>
-                  <AttachmentCount n={nFiles} />
-                  <ScoreBadge a={attemptOf(s)} />
-                  {s.curator_comment && <Badge tone="brand"><MessageSquare className="size-3" /> Пікір</Badge>}
-                </div>
-              </button>
-            );
-          })}
+        <div className="grid gap-3 xl:grid-cols-2">
+          {list.map((s) => (
+            <TaskCard key={s.id} s={s} mode={mode} name={names?.get(s.student_id)} onOpen={() => setOpenId(s.id)} />
+          ))}
         </div>
       )}
       {open && (
@@ -187,6 +187,60 @@ export function SubmissionList({
         />
       )}
     </div>
+  );
+}
+
+/** Бір тапсырманың карточкасы: атауы, қысқаша сипаттамасы, кезеңі, түрі, күндері, статусы, «Ашу» батырмасы */
+function TaskCard({ s, mode, name, onOpen }: { s: Row; mode: 'student' | 'curator'; name?: string; onOpen: () => void }) {
+  const t = s.tasks!;
+  const overdue = isOverdue(s);
+  const Icon = KIND_ICON[t.kind];
+  const nFiles = (t as Task & { task_attachments?: { id: string }[] }).task_attachments?.length ?? 0;
+  const done = s.status === 'accepted';
+  return (
+    <article data-testid="submission-card" onClick={onOpen}
+      className={clsx('card flex min-w-0 cursor-pointer flex-col gap-3 p-4 transition hover:ring-brand-300 sm:p-5', done && 'bg-white/70')}>
+      <div className="flex items-start gap-3">
+        <span className={clsx('flex size-10 shrink-0 items-center justify-center rounded-2xl', done ? 'bg-ok-soft text-ok' : 'bg-brand-50 text-brand-900')}>
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+            <h3 className="min-w-0 text-[15px] leading-snug font-bold text-ink [overflow-wrap:anywhere]">{t.title}</h3>
+            <StatusPill status={s.status} overdue={overdue} />
+          </div>
+          {mode === 'curator' && name && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-brand-700"><Avatar name={name} size={18} /> {name}</p>
+          )}
+          {t.description && <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted">{t.description}</p>}
+        </div>
+      </div>
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-mist px-3 py-2 text-xs text-ink sm:hidden">
+        <span className="font-semibold">{MONTHS[t.period_month - 1]}, {t.period_week}-апта</span><span className="text-muted">·</span>
+        <span>{TASK_KIND[t.kind].label}</span><span className="text-muted">·</span>
+        <span>{shortDate(t.start_date).slice(0, 5)} → <b className={overdue ? 'text-bad' : ''}>{shortDate(t.due_date).slice(0, 5)}</b></span>
+      </p>
+      <dl className="hidden grid-cols-4 gap-x-3 gap-y-2 rounded-2xl bg-mist px-3.5 py-3 text-xs sm:grid">
+        <div className="min-w-0"><dt className="text-[10px] font-semibold tracking-wide text-muted uppercase">Кезеңі</dt>
+          <dd className="truncate font-semibold text-ink">{MONTHS[t.period_month - 1]}, {t.period_week}-апта</dd></div>
+        <div className="min-w-0"><dt className="text-[10px] font-semibold tracking-wide text-muted uppercase">Түрі</dt>
+          <dd className="truncate font-semibold text-ink">{TASK_KIND[t.kind].label}</dd></div>
+        <div className="min-w-0"><dt className="text-[10px] font-semibold tracking-wide text-muted uppercase">Берілді</dt>
+          <dd className="font-semibold text-ink">{shortDate(t.start_date)}</dd></div>
+        <div className="min-w-0"><dt className="text-[10px] font-semibold tracking-wide text-muted uppercase">Мерзімі</dt>
+          <dd className={clsx('font-semibold', overdue ? 'text-bad' : 'text-ink')}>{shortDate(t.due_date)}</dd></div>
+      </dl>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <AttachmentCount n={nFiles} />
+          <ScoreBadge a={attemptOf(s)} />
+          {s.curator_comment && <Badge tone="brand"><MessageSquare className="size-3" /> Куратор пікірі</Badge>}
+        </div>
+        <Button size="sm" variant={OPEN.includes(s.status) && mode === 'student' ? 'primary' : 'secondary'} onClick={(e) => { e.stopPropagation(); onOpen(); }} className="ml-auto" data-testid="open-task">
+          {mode === 'curator' ? (s.status === 'pending_review' ? 'Тексеру' : 'Ашу') : 'Тапсырманы ашу'} <ChevronRight className="size-4" />
+        </Button>
+      </div>
+    </article>
   );
 }
 
@@ -220,15 +274,18 @@ function SubmissionModal({
 
   const extra = useLoad(async () => {
     const sb = supabaseBrowser();
-    const [att, files, result] = await Promise.all([
+    const [att, files, result, hist] = await Promise.all([
       sb.from('task_attachments').select('*').eq('task_id', t.id).order('created_at'),
       sb.from('submission_files').select('*').eq('submission_id', sub.id).order('created_at'),
       isTest ? sb.rpc('test_result', { p_submission: sub.id }) : Promise.resolve({ data: null, error: null }),
+      isTest ? sb.from('test_attempt_history').select('id, attempt_no, test_version, score, max_score, finished_at, reason, result')
+        .eq('submission_id', sub.id).order('archived_at', { ascending: false }) : Promise.resolve({ data: [], error: null }),
     ]);
     return {
       attachments: must(att) as FileMeta[],
       files: must(files) as FileMeta[],
       result: must(result as { data: unknown; error: unknown }) as TestResult | null,
+      history: must(hist as { data: unknown; error: unknown }) as HistoryRow[],
     };
   }, [sub.id, sub.status]);
 
@@ -314,10 +371,11 @@ function SubmissionModal({
         subtitle={mode === 'curator' && studentName ? studentName : `Берілген күні: ${shortDate(t.start_date)}`} footer={footer}>
         <div className="space-y-5">
           <div className="flex flex-wrap gap-1.5">
+            <StatusPill status={sub.status} overdue={isOverdue(sub)} />
             <KindBadge kind={t.kind} />
-            <Badge tone={SUBMISSION_STATUS[sub.status].tone}>{SUBMISSION_STATUS[sub.status].label}</Badge>
-            <Badge tone={PRIORITY[t.priority].tone}>Маңыздылығы: {PRIORITY[t.priority].label}</Badge>
+            <Badge><CalendarRange className="size-3" /> {MONTHS[t.period_month - 1]}, {t.period_week}-апта</Badge>
             <Badge><CalendarClock className="size-3" /> {shortDate(t.start_date)} – {shortDate(t.due_date)}</Badge>
+            <Badge tone={PRIORITY[t.priority].tone}>Маңыздылығы: {PRIORITY[t.priority].label}</Badge>
             {isTest && t.time_limit_minutes && <Badge tone="info">{t.time_limit_minutes} минут</Badge>}
           </div>
           {t.description && (
@@ -362,6 +420,7 @@ function SubmissionModal({
                 </a>
               )}
 
+              {isTest && extra.data!.history.length > 0 && <AttemptHistory rows={extra.data!.history} />}
               {isTest ? (
                 attempt ? <TestResultView result={attempt} /> : (
                   <div className="rounded-2xl bg-white p-4 text-sm ring-1 ring-line">
@@ -424,6 +483,34 @@ function SubmissionModal({
           onFinished={() => { extra.reload(true); onChanged(); }} />
       )}
     </>
+  );
+}
+
+type HistoryRow = { id: string; attempt_no: number; test_version: number; score: number | null; max_score: number | null; finished_at: string | null; reason: 'retake' | 'new_version'; result: TestResult | null };
+
+/** Бұрынғы әрекеттер (қайта тапсыру немесе тесттің жаңа нұсқасы кезінде сақталған нәтижелер) */
+function AttemptHistory({ rows }: { rows: HistoryRow[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const cur = rows.find((r) => r.id === open);
+  return (
+    <section className="rounded-2xl bg-white p-4 ring-1 ring-line" data-testid="attempt-history">
+      <h4 className="mb-2 flex items-center gap-2 text-xs font-bold text-muted"><History className="size-4" /> Бұрынғы нәтижелер</h4>
+      <ul className="space-y-1.5">
+        {rows.map((r) => (
+          <li key={r.id}>
+            <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)}
+              className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-mist px-3 py-2 text-left text-xs hover:bg-mist-dark">
+              <b className="text-ink">{r.attempt_no}-әрекет</b>
+              {r.test_version > 1 && <span className="text-muted">· {r.test_version}-нұсқа</span>}
+              <span className="text-muted">· {r.finished_at ? dateTime(r.finished_at) : '—'}</span>
+              <span className="text-muted">· {r.reason === 'retake' ? 'қайта тапсыру' : 'тест жаңартылды'}</span>
+              <span className="ml-auto font-bold text-ink">{Number(r.score)}/{Number(r.max_score)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {cur?.result && <div className="mt-3"><TestResultView result={cur.result} /></div>}
+    </section>
   );
 }
 
@@ -538,6 +625,8 @@ type CatalogTask = Task & {
 export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; names: Map<string, string> }) {
   const [del, setDel] = useState<CatalogTask | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [copyId, setCopyId] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
   const students = useMemo(() => [...names.entries()].map(([id, full_name]) => ({ id, full_name })), [names]);
   const { data, error, loading, reload } = useLoad(async () => {
     const res = await supabaseBrowser().from('tasks')
@@ -560,13 +649,15 @@ export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; na
         return (
           <Card key={t.id} className="p-4 sm:p-5" data-testid="catalog-task">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-bold text-ink">{t.title}</p>
+              <button type="button" className="min-w-0 text-left" onClick={() => setViewId(t.id)}>
+                <p className="font-bold text-ink hover:underline">{t.title}</p>
                 <p className="mt-0.5 text-xs text-muted">{periodShort(t)} · {shortDate(t.start_date)} – {shortDate(t.due_date)} · {subs.length} оқушы · {acc} қабылданды
                   {t.kind === 'test' && ` · ${done.length} тапсырды${avg != null ? ` · орташа ${avg}%` : ''}`}</p>
-              </div>
+              </button>
               <ActionMenu label={`«${t.title}» әрекеттері`} items={[
-                { label: 'Өңдеу', icon: Pencil, onSelect: () => setEditId(t.id), testId: 'task-edit' },
+                { label: 'Тапсырманы ашу', icon: Eye, onSelect: () => setViewId(t.id), testId: 'task-open' },
+                { label: 'Тапсырманы өзгерту', icon: Pencil, onSelect: () => setEditId(t.id), testId: 'task-edit' },
+                { label: 'Тапсырманы көшіру', icon: Copy, onSelect: () => setCopyId(t.id), testId: 'task-copy' },
                 { label: 'Тапсырманы өшіру', icon: Trash2, onSelect: () => setDel(t), danger: true, testId: 'task-delete' },
               ]} />
             </div>
@@ -590,6 +681,11 @@ export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; na
       })}
       {del && <DeleteTaskModal task={del} names={names} onClose={() => setDel(null)} onDone={() => { setDel(null); reload(true); }} />}
       {editId && <TaskEditorModal students={students} editId={editId} onClose={() => setEditId(null)} onSaved={() => { setEditId(null); reload(true); }} />}
+      {copyId && <TaskEditorModal students={students} copyId={copyId} onClose={() => setCopyId(null)} onSaved={() => { setCopyId(null); reload(true); }} />}
+      {viewId && (
+        <TaskDetailModal taskId={viewId} names={names} onClose={() => setViewId(null)}
+          onEdit={() => { setEditId(viewId); setViewId(null); }} onCopy={() => { setCopyId(viewId); setViewId(null); }} />
+      )}
     </div>
   );
 }
@@ -667,3 +763,81 @@ function DeleteTaskModal({ task, names, onClose, onDone }: {
   );
 }
 
+
+/** Куратор: тапсырманы ашу — толық мазмұны және әр оқушының нәтижесі */
+function TaskDetailModal({ taskId, names, onClose, onEdit, onCopy }: {
+  taskId: string; names: Map<string, string>; onClose: () => void; onEdit: () => void; onCopy: () => void;
+}) {
+  const [openSub, setOpenSub] = useState<string | null>(null);
+  const { data, error, loading, reload } = useLoad(async () => {
+    const sb = supabaseBrowser();
+    const [task, subs] = await Promise.all([
+      sb.from('tasks').select('*, task_attachments(*), test_questions(id, version, points)').eq('id', taskId).single(),
+      sb.from('task_submissions').select('*, tasks(*, task_attachments(id)), test_attempts(score, max_score, finished_at)').eq('task_id', taskId),
+    ]);
+    const t = must(task) as Task & { task_attachments: FileMeta[]; test_questions: { id: string; version: number; points: number }[] };
+    return { t, subs: (must(subs) as Row[]).sort((a, b) => (names.get(a.student_id) ?? '').localeCompare(names.get(b.student_id) ?? '')) };
+  }, [taskId]);
+  useRealtime(['task_submissions', 'test_attempts'], () => reload(true), `task_id=eq.${taskId}`);
+  const sub = data?.subs.find((x) => x.id === openSub) ?? null;
+  const qs = data ? data.t.test_questions.filter((q) => q.version === data.t.test_version) : [];
+
+  return (
+    <>
+      <Modal open onClose={onClose} size="lg" title={data?.t.title ?? 'Тапсырма'}
+        subtitle={data ? `${TASK_KIND[data.t.kind].label} · ${periodShort(data.t)}` : undefined}
+        footer={<>
+          <Button variant="secondary" onClick={onCopy}><Copy className="size-4" /> Көшіру</Button>
+          <Button onClick={onEdit} data-testid="detail-edit"><Pencil className="size-4" /> Өзгерту</Button>
+        </>}>
+        {loading ? <LoadingBlock rows={3} /> : error ? <ErrorState text={error} onRetry={reload} /> : data && (
+          <div className="space-y-5" data-testid="task-detail">
+            <div className="flex flex-wrap gap-1.5">
+              <KindBadge kind={data.t.kind} />
+              <Badge><CalendarRange className="size-3" /> {MONTHS[data.t.period_month - 1]}, {data.t.period_week}-апта</Badge>
+              <Badge><CalendarClock className="size-3" /> {shortDate(data.t.start_date)} – {shortDate(data.t.due_date)}</Badge>
+              {data.t.kind === 'test' && <Badge tone="info">{qs.length} сұрақ · {qs.reduce((a, q) => a + Number(q.points), 0)} ұпай{data.t.test_version > 1 ? ` · ${data.t.test_version}-нұсқа` : ''}</Badge>}
+            </div>
+            {data.t.description && <p className="text-sm leading-relaxed whitespace-pre-wrap">{data.t.description}</p>}
+            {data.t.instructions && (
+              <section className="rounded-2xl bg-mist p-4">
+                <h4 className="mb-1 text-xs font-bold text-muted">Орындау нұсқаулығы</h4>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{data.t.instructions}</p>
+              </section>
+            )}
+            {data.t.task_attachments.length > 0 && (
+              <section>
+                <h4 className="mb-2 text-xs font-bold text-muted">Материалдар</h4>
+                <FileList files={data.t.task_attachments} />
+              </section>
+            )}
+            <section>
+              <h4 className="mb-2 text-xs font-bold text-muted">Оқушылар ({data.subs.length})</h4>
+              <ul className="divide-y divide-line overflow-hidden rounded-2xl ring-1 ring-line">
+                {data.subs.map((x) => {
+                  const a = attemptOf(x);
+                  const name = names.get(x.student_id) ?? 'Оқушы';
+                  return (
+                    <li key={x.id}>
+                      <button type="button" onClick={() => setOpenSub(x.id)} className="flex w-full items-center gap-3 bg-white px-3 py-2.5 text-left hover:bg-mist">
+                        <Avatar name={name} size={30} />
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{name}</span>
+                        <ScoreBadge a={a} />
+                        <StatusPill status={x.status} overdue={isOverdue(x)} />
+                        <ChevronRight className="size-4 shrink-0 text-muted" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          </div>
+        )}
+      </Modal>
+      {sub && (
+        <SubmissionModal sub={sub} mode="curator" studentName={names.get(sub.student_id)}
+          onClose={() => setOpenSub(null)} onChanged={() => reload(true)} onDone={() => { setOpenSub(null); reload(true); }} />
+      )}
+    </>
+  );
+}

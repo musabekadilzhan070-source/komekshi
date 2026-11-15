@@ -69,7 +69,7 @@ export function useNotifications() {
 }
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  task_assigned: ClipboardList, task_removed: ClipboardList, task_submitted: ClipboardList, task_accepted: CheckCircle2, task_revision: RotateCcw,
+  task_assigned: ClipboardList, task_removed: ClipboardList, task_updated: ClipboardList, task_submitted: ClipboardList, task_accepted: CheckCircle2, task_revision: RotateCcw,
   plan_added: CalendarPlus, tracker_published: ListChecks, tracker_updated: ListChecks, qa_video: PlayCircle,
   report_submitted: BookOpen, report_accepted: CheckCircle2, report_revision: RotateCcw,
   student_request: UserPlus, curator_request: UserPlus, request_approved: CheckCircle2,

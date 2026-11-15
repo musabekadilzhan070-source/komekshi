@@ -36,6 +36,7 @@ export interface Plan {
   creator_role: 'student' | 'curator';
   title: string;
   description: string | null;
+  note: string | null;
   plan_date: string;
   start_time: string | null;
   end_time: string | null;
@@ -71,6 +72,7 @@ export interface Task {
   period_year: number;
   period_month: number;
   period_week: number;
+  test_version: number;
 }
 
 export interface StoredFile {
