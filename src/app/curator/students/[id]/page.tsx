@@ -29,15 +29,15 @@ export default function CuratorStudentProfile({ params }: { params: Promise<{ id
 
   if (loading) return <LoadingBlock rows={4} />;
   if (error) return <ErrorState text={error} onRetry={reload} />;
-  if (!s) return <EmptyState title="Оқушы табылмады" text="Бұл оқушы сіздің тобыңызда емес." action={<Link href="/curator/students" className="font-bold text-navy-700">Оқушылар тізіміне</Link>} />;
+  if (!s) return <EmptyState title="Оқушы табылмады" text="Бұл оқушы сіздің тобыңызда емес." action={<Link href="/curator/students" className="font-bold text-brand-700">Оқушылар тізіміне</Link>} />;
 
   return (
     <div className="space-y-5">
-      <Link href="/curator/students" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-navy-900"><ArrowLeft className="size-4" /> Менің оқушыларым</Link>
+      <Link href="/curator/students" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-ink"><ArrowLeft className="size-4" /> Менің оқушыларым</Link>
       <Card className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
         <Avatar name={s.full_name} size={72} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-extrabold text-navy-900">{s.full_name}</h1>
+          <h1 className="text-2xl font-extrabold text-ink">{s.full_name}</h1>
           <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted"><Mail className="size-3.5" /> {s.email}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge>Тіркелген: {shortDate(s.joined_at ?? s.created_at)}</Badge>
@@ -79,7 +79,7 @@ function StudentTrackers({ studentId }: { studentId: string }) {
   const [sel, setSel] = useState<string | null>(null);
   if (loading) return <LoadingBlock />;
   if (error) return <ErrorState text={error} onRetry={reload} />;
-  if (!data!.trackers.length) return <EmptyState icon={ListChecks} title="Трекер тағайындалмаған" action={<Link href="/curator/tracker" className="text-sm font-bold text-navy-700">Трекер құру →</Link>} />;
+  if (!data!.trackers.length) return <EmptyState icon={ListChecks} title="Трекер тағайындалмаған" action={<Link href="/curator/tracker" className="text-sm font-bold text-brand-700">Трекер құру →</Link>} />;
   const t = data!.trackers.find((x) => x.id === sel) ?? data!.trackers[0];
   return (
     <div className="space-y-4">

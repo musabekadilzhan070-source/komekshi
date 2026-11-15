@@ -70,17 +70,17 @@ export function RequestsBoard({ kind, curatorId }: { kind: 'student' | 'curator'
               <div className="flex items-start gap-3">
                 <Avatar name={r.person?.full_name ?? '?'} size={46} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-navy-900">{r.person?.full_name ?? 'Өшірілген аккаунт'}</p>
+                  <p className="font-bold text-ink">{r.person?.full_name ?? 'Өшірілген аккаунт'}</p>
                   {kind === 'curator' && r.person?.email && <p className="flex items-center gap-1.5 truncate text-xs text-muted"><Mail className="size-3" /> {r.person.email}</p>}
                   <p className="mt-0.5 text-[11px] text-muted">Жіберілді: {dateTime(r.created_at)}</p>
                 </div>
                 <Badge tone={REQUEST_STATUS[r.status].tone}>{REQUEST_STATUS[r.status].label}</Badge>
               </div>
               {kind === 'curator' && (r.contact_info || r.person?.contact_info) && (
-                <p className="mt-3 flex items-center gap-2 rounded-2xl bg-mist/60 px-3 py-2 text-sm"><Phone className="size-4 text-navy-700" /> {r.contact_info || r.person?.contact_info}</p>
+                <p className="mt-3 flex items-center gap-2 rounded-2xl bg-mist/60 px-3 py-2 text-sm"><Phone className="size-4 text-brand-700" /> {r.contact_info || r.person?.contact_info}</p>
               )}
               {!curatorId && kind === 'student' && r.curator && <p className="mt-2 text-xs text-muted">Таңдаған куратор: <b className="text-ink">{r.curator.full_name}</b></p>}
-              {r.message && <p className="mt-3 flex gap-2 rounded-2xl bg-navy-50 px-3 py-2 text-sm"><MessageSquare className="mt-0.5 size-4 shrink-0 text-navy-700" /> {r.message}</p>}
+              {r.message && <p className="mt-3 flex gap-2 rounded-2xl bg-brand-50 px-3 py-2 text-sm"><MessageSquare className="mt-0.5 size-4 shrink-0 text-brand-700" /> {r.message}</p>}
               {r.decided_at && <p className="mt-2 text-[11px] text-muted">Шешім: {dateTime(r.decided_at)}</p>}
               {r.status === 'pending' && (
                 <div className="mt-4 flex gap-2">

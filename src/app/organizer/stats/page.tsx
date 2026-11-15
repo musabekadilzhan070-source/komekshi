@@ -38,19 +38,19 @@ export default function OrganizerStatsPage() {
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
             <Card className="p-4 sm:p-5">
-              <h3 className="mb-2 text-sm font-bold text-navy-900">Орташа апталық прогресс, %</h3>
+              <h3 className="mb-2 text-sm font-bold text-ink">Орташа апталық прогресс, %</h3>
               <AreaTrend data={data!.history} x="week_start" y="avg_progress" name="Прогресс" unit="%" max={100} />
             </Card>
             <Card className="p-4 sm:p-5">
-              <h3 className="mb-2 text-sm font-bold text-navy-900">Кітап оқу статистикасы (апта бойынша)</h3>
+              <h3 className="mb-2 text-sm font-bold text-ink">Кітап оқу статистикасы (апта бойынша)</h3>
               <Bars data={data!.history} x="week_start" tickFormatter={weekTick} bars={[{ key: 'pages', name: 'Беттер' }, { key: 'minutes', name: 'Минут' }]} />
             </Card>
             <Card className="p-4 sm:p-5">
-              <h3 className="mb-2 text-sm font-bold text-navy-900">Тапсырма және сұрақ-жауап белсенділігі</h3>
+              <h3 className="mb-2 text-sm font-bold text-ink">Тапсырма және сұрақ-жауап белсенділігі</h3>
               <Bars data={data!.history} x="week_start" tickFormatter={weekTick} bars={[{ key: 'tasks_done', name: 'Тапсырылған тапсырмалар' }, { key: 'qa_completed', name: 'Қаралған видео' }]} />
             </Card>
             <Card className="p-4 sm:p-5">
-              <h3 className="mb-2 text-sm font-bold text-navy-900">Әр кураторға тіркелген оқушылар</h3>
+              <h3 className="mb-2 text-sm font-bold text-ink">Әр кураторға тіркелген оқушылар</h3>
               {perCurator.length ? <Bars data={perCurator} x="name" layout="vertical" height={Math.max(200, perCurator.length * 40 + 40)} bars={[{ key: 'students', name: 'Оқушылар' }]} />
                 : <EmptyState icon={Users} title="Белсенді куратор жоқ" />}
             </Card>
@@ -65,7 +65,7 @@ export default function OrganizerStatsPage() {
                   <tbody>
                     {perCurator.map((c) => (
                       <tr key={c.name} className="border-b border-line/60 last:border-0">
-                        <td className="px-4 py-3 font-semibold text-navy-900">{c.name}</td>
+                        <td className="px-4 py-3 font-semibold text-ink">{c.name}</td>
                         <td className="px-3 py-3">{c.students}</td>
                         <td className="px-3 py-3 font-bold">{c.progress}%</td>
                         <td className="px-3 py-3">{c.tasks}</td>

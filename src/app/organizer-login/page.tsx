@@ -46,8 +46,8 @@ export default function OrganizerLoginPage() {
 
   return (
     <AuthFrame aside={<AuthAside title="Платформаны басқару" text="Кураторлар мен оқушыларды, өтініштер мен статистиканы бір жерден басқарыңыз." />}>
-      <span className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-navy-900 text-mist shadow-soft"><KeyRound className="size-6" /></span>
-      <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">Организатор кабинетіне кіру</h1>
+      <span className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-brand-900 text-white shadow-soft"><KeyRound className="size-6" /></span>
+      <h1 className="text-3xl font-extrabold tracking-tight text-ink">Организатор кабинетіне кіру</h1>
       <p className="mt-2 text-sm text-muted">Арнайы кіру кодын енгізіңіз.</p>
       <form onSubmit={submit} className="mt-8 space-y-4" autoComplete="off">
         <Field label="Кіру коды">
@@ -61,7 +61,7 @@ export default function OrganizerLoginPage() {
         <Button type="submit" size="lg" className="w-full" loading={loading}><LogIn className="size-4" /> Кіру</Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
-        <Link href="/login" className="font-bold text-navy-700 hover:underline">Оқушы немесе куратор ретінде кіру</Link>
+        <Link href="/login" className="font-bold text-brand-700 hover:underline">Оқушы немесе куратор ретінде кіру</Link>
       </p>
     </AuthFrame>
   );

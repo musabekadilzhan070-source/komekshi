@@ -1,6 +1,6 @@
 import {
   BarChart3, BookOpen, CalendarDays, ClipboardList, GraduationCap, LayoutDashboard, ListChecks,
-  PlayCircle, Settings, TrendingUp, UserPlus, Users, Video,
+  Archive, PlayCircle, Settings, TrendingUp, UserPlus, Users, Video,
 } from 'lucide-react';
 import type { Role } from './types';
 
@@ -40,6 +40,7 @@ export const NAV: Record<Role, NavItem[]> = {
     { href: '/organizer/curators', label: 'Кураторлар', icon: Users, mobile: true },
     { href: '/organizer/requests', label: 'Тіркелу өтініштері', short: 'Өтініштер', icon: UserPlus, badge: 'curator_requests', mobile: true },
     { href: '/organizer/stats', label: 'Жалпы статистика', icon: BarChart3 },
+    { href: '/organizer/archive', label: 'Тапсырмалар архиві', icon: Archive },
     { href: '/organizer/settings', label: 'Платформа баптаулары', icon: Settings },
   ],
 };

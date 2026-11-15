@@ -10,7 +10,6 @@ import type { Opt, RunnerQuestion, TestResult, TestResultItem, TestStart } from 
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Badge, ErrorState, LoadingBlock, ProgressRing } from '@/components/ui/misc';
-import { Ornament } from '@/components/ui/ornament';
 import { SignedImage } from './task-files';
 
 type Answers = Record<string, unknown>;
@@ -134,7 +133,7 @@ export function TestRunner({
           </div>
           <aside className="order-first space-y-3 lg:order-none">
             {left != null && (
-              <div className={clsx('flex items-center gap-2 rounded-2xl px-4 py-3 font-bold', left <= 60 ? 'bg-bad-soft text-bad' : 'bg-navy-900 text-white')} role="timer" aria-live="off">
+              <div className={clsx('flex items-center gap-2 rounded-2xl px-4 py-3 font-bold', left <= 60 ? 'bg-bad-soft text-bad' : 'bg-brand-900 text-white')} role="timer" aria-live="off">
                 <AlarmClock className="size-5" />
                 <span className="tabular-nums">{String(Math.floor(left / 60)).padStart(2, '0')}:{String(left % 60).padStart(2, '0')}</span>
                 <span className="ml-auto text-[11px] font-semibold opacity-75">қалды</span>
@@ -146,7 +145,7 @@ export function TestRunner({
                 {qs.map((x, j) => (
                   <button key={x.id} type="button" onClick={() => setI(j)} aria-label={`${j + 1}-сұрақ`} aria-current={j === i}
                     className={clsx('flex aspect-square items-center justify-center rounded-lg text-xs font-bold transition',
-                      j === i ? 'bg-navy-900 text-white' : isAnswered(x, answers[x.id]) ? 'bg-navy-100 text-navy-900' : 'bg-mist text-muted')}>
+                      j === i ? 'bg-brand-900 text-white' : isAnswered(x, answers[x.id]) ? 'bg-brand-100 text-ink' : 'bg-mist text-muted')}>
                     {j + 1}
                   </button>
                 ))}
@@ -173,9 +172,9 @@ function ChoiceRow({ on, multi, label, letter, onClick }: { on: boolean; multi?:
   return (
     <button type="button" role={multi ? 'checkbox' : 'radio'} aria-checked={on} onClick={onClick}
       className={clsx('flex w-full items-center gap-3 rounded-2xl p-3 text-left text-sm ring-1 transition',
-        on ? 'bg-navy-900 text-white ring-navy-900' : 'bg-white text-ink ring-line hover:ring-navy-300')}>
+        on ? 'bg-brand-900 text-white ring-brand-900' : 'bg-white text-ink ring-line hover:ring-brand-300')}>
       <span className={clsx('flex size-7 shrink-0 items-center justify-center border-2 text-[11px] font-bold', multi ? 'rounded-lg' : 'rounded-full',
-        on ? 'border-mist bg-mist text-navy-900' : 'border-navy-300 text-navy-700')}>{on ? '✓' : letter}</span>
+        on ? 'border-white bg-mist text-ink' : 'border-brand-300 text-brand-700')}>{on ? '✓' : letter}</span>
       <span className="min-w-0 flex-1">{label}</span>
     </button>
   );
@@ -185,18 +184,17 @@ function QuestionView({ q, index, value, onChange }: { q: RunnerQuestion; index:
   return (
     <div className="space-y-4" data-testid="runner-question">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-navy-900 text-sm font-extrabold text-mist">{index + 1}</span>
-        <Badge tone="navy">{QUESTION_TYPE[q.qtype].label}</Badge>
+        <span className="flex size-9 items-center justify-center rounded-xl bg-brand-900 text-sm font-extrabold text-white">{index + 1}</span>
+        <Badge tone="brand">{QUESTION_TYPE[q.qtype].label}</Badge>
         <Badge>{Number(q.points)} ұпай</Badge>
       </div>
       {q.context_text && (
-        <div className="relative overflow-hidden rounded-2xl bg-sand-100 p-4 text-sm leading-relaxed whitespace-pre-wrap text-ink">
-          <Ornament kind="botakoz" className="absolute -top-3 -right-3 size-16 text-sand-500/30" />
+        <div className="relative overflow-hidden rounded-2xl bg-mist p-4 text-sm leading-relaxed whitespace-pre-wrap text-ink">
           <span className="relative">{q.context_text}</span>
         </div>
       )}
       {q.image_path && <SignedImage path={q.image_path} alt="Сұрақ суреті" className="max-h-80 w-auto ring-1 ring-line" />}
-      <p className="text-base font-bold leading-snug whitespace-pre-wrap text-navy-900">{q.prompt}</p>
+      <p className="text-base font-bold leading-snug whitespace-pre-wrap text-ink">{q.prompt}</p>
 
       {(q.qtype === 'single' || q.qtype === 'context' || q.qtype === 'image') && (
         <div className="space-y-2" role="radiogroup">
@@ -229,7 +227,7 @@ function MatchingInput({ q, value, onChange }: { q: RunnerQuestion; value?: Reco
     <div className="space-y-2">
       {left.map((l, j) => (
         <div key={l.id} className="grid items-center gap-2 rounded-2xl bg-white p-2.5 ring-1 ring-line sm:grid-cols-2">
-          <p className="text-sm font-semibold text-navy-900"><span className="mr-1.5 text-muted">{j + 1}.</span>{l.text}</p>
+          <p className="text-sm font-semibold text-ink"><span className="mr-1.5 text-muted">{j + 1}.</span>{l.text}</p>
           <select value={v[l.id] ?? ''} onChange={(e) => onChange({ ...v, [l.id]: e.target.value })} aria-label={`${l.text} — сәйкес жауап`}
             className="field-input !py-2">
             <option value="">— Таңдаңыз —</option>
@@ -255,10 +253,10 @@ function OrderingInput({ q, value, onChange }: { q: RunnerQuestion; value?: stri
         const o = opts.find((x) => x.id === id)!;
         return (
           <div key={id} className="flex items-center gap-2 rounded-2xl bg-white p-2 pl-3 ring-1 ring-line" data-testid="order-item">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-mist">{j + 1}</span>
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[11px] font-bold text-white">{j + 1}</span>
             <span className="min-w-0 flex-1 text-sm">{o?.text}</span>
-            <button type="button" onClick={() => move(j, -1)} disabled={j === 0} aria-label={`${o?.text} — жоғары`} className="flex size-9 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50 disabled:opacity-30"><ArrowUp className="size-4" /></button>
-            <button type="button" onClick={() => move(j, 1)} disabled={j === order.length - 1} aria-label={`${o?.text} — төмен`} className="flex size-9 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50 disabled:opacity-30"><ArrowDown className="size-4" /></button>
+            <button type="button" onClick={() => move(j, -1)} disabled={j === 0} aria-label={`${o?.text} — жоғары`} className="flex size-9 items-center justify-center rounded-full text-ink hover:bg-brand-50 disabled:opacity-30"><ArrowUp className="size-4" /></button>
+            <button type="button" onClick={() => move(j, 1)} disabled={j === order.length - 1} aria-label={`${o?.text} — төмен`} className="flex size-9 items-center justify-center rounded-full text-ink hover:bg-brand-50 disabled:opacity-30"><ArrowDown className="size-4" /></button>
           </div>
         );
       })}
@@ -303,7 +301,7 @@ function ItemReview({ it, index }: { it: TestResultItem; index: number }) {
         <Icon className={clsx('mt-0.5 size-5 shrink-0', full ? 'text-ok' : none ? 'text-bad' : 'text-warn')} />
         <div className="min-w-0 flex-1 space-y-2 text-sm">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <p className="font-bold text-navy-900">{index + 1}. {it.prompt}</p>
+            <p className="font-bold text-ink">{index + 1}. {it.prompt}</p>
             <Badge tone={full ? 'ok' : none ? 'bad' : 'warn'}>{Number(it.earned)} / {Number(it.points)}</Badge>
           </div>
           {it.image_path && <SignedImage path={it.image_path} alt="Сұрақ суреті" className="max-h-40" />}
@@ -325,8 +323,7 @@ export function TestResultView({ result }: { result: TestResult }) {
   }
   return (
     <div className="space-y-5" data-testid="test-result">
-      <div className="relative flex flex-col items-center gap-5 overflow-hidden rounded-3xl bg-navy-900 p-5 text-white sm:flex-row">
-        <Ornament kind="koshkar" className="absolute -top-8 -right-8 size-44 text-mist/[0.07]" strokeWidth={1.6} />
+      <div className="relative flex flex-col items-center gap-5 overflow-hidden rounded-3xl bg-brand-900 p-5 text-white sm:flex-row">
         <ProgressRing value={pct} light size={112} label="нәтиже" />
         <div className="relative text-center sm:text-left">
           <p className="text-3xl font-extrabold" data-testid="test-score">{Number(result.score)} / {Number(result.max_score)} ұпай</p>

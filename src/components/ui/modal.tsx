@@ -26,8 +26,14 @@ export function Modal({
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    setTimeout(() => panel.current?.querySelector<HTMLElement>('input,textarea,select,button[data-autofocus]')?.focus(), 30);
+    // Пайдаланушы өзі бір өріске фокус қойып үлгерсе, оны тартып алмаймыз
+    const t = setTimeout(() => {
+      if (panel.current && !panel.current.contains(document.activeElement)) {
+        panel.current.querySelector<HTMLElement>('input,textarea,select,button[data-autofocus]')?.focus();
+      }
+    }, 30);
     return () => {
+      clearTimeout(t);
       STACK.splice(STACK.indexOf(id), 1);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
@@ -37,7 +43,7 @@ export function Modal({
   if (!open || typeof document === 'undefined') return null;
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-navy-950/45 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-brand-950/45 backdrop-blur-[2px]" onClick={onClose} />
       <div
         ref={panel}
         className={clsx(
@@ -47,10 +53,10 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 pt-5 pb-4 sm:px-7">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-navy-900">{title}</h3>
+            <h3 className="text-lg font-bold text-ink">{title}</h3>
             {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
           </div>
-          <button onClick={onClose} aria-label="Жабу" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-navy-900 ring-1 ring-line hover:bg-navy-50">
+          <button onClick={onClose} aria-label="Жабу" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-ink ring-1 ring-line hover:bg-brand-50">
             <X className="size-4" />
           </button>
         </div>

@@ -3,26 +3,26 @@
 @theme {
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
-  --color-navy-950: #04112E;
-  --color-navy-900: #082052;
-  --color-navy-800: #102C66;
-  --color-navy-700: #1F3F80;
-  --color-navy-500: #5B6E9C;
-  --color-navy-300: #A8B4D0;
-  --color-navy-200: #CED6E7;
-  --color-navy-100: #E7EBF4;
-  --color-navy-50:  #F3F5FA;
+  --color-brand-950: #2B060B;
+  --color-brand-900: #450C13;
+  --color-brand-800: #5A1620;
+  --color-brand-700: #72212D;
+  --color-brand-500: #A0606A;
+  --color-brand-300: #D4B3B8;
+  --color-brand-200: #E8D3D6;
+  --color-brand-100: #F5E9EB;
+  --color-brand-50:  #FBF6F7;
 
-  --color-sand-500: #C9AE86;
-  --color-sand-300: #E6D5BC;
-  --color-sand-100: #F2E7D7;
+  --color-sand-500: #B9A2A6;
+  --color-sand-300: #E2D4D6;
+  --color-sand-100: #F4F1F1;
 
-  --color-mist: #F8F0E5;
-  --color-mist-dark: #EFE3D2;
-  --color-cream: #FFFCF7;
-  --color-ink: #0B1733;
-  --color-muted: #5C6680;
-  --color-line: #ECE2D3;
+  --color-mist: #F6F6F6;
+  --color-mist-dark: #ECECEC;
+  --color-cream: #FFFFFF;
+  --color-ink: #000000;
+  --color-muted: #4B4B4B;
+  --color-line: #E7E7E7;
 
   --color-ok: #2F7D5B;
   --color-ok-soft: #E3F1EA;
@@ -36,21 +36,21 @@
   --radius-xl2: 1.25rem;
   --radius-xl3: 1.75rem;
 
-  --shadow-soft: 0 1px 2px rgba(8, 32, 82, 0.04), 0 8px 24px -12px rgba(8, 32, 82, 0.10);
-  --shadow-lift: 0 2px 4px rgba(8, 32, 82, 0.05), 0 18px 40px -16px rgba(8, 32, 82, 0.20);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.10);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.05), 0 18px 40px -16px rgba(0, 0, 0, 0.20);
 }
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
   body {
-    background: var(--color-mist);
+    background: #FFFFFF;
     color: var(--color-ink);
     font-feature-settings: "liga" 1, "kern" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  ::selection { background: var(--color-navy-300); color: var(--color-navy-950); }
-  :focus-visible { outline: 2px solid var(--color-navy-700); outline-offset: 2px; }
+  ::selection { background: var(--color-brand-300); color: var(--color-brand-950); }
+  :focus-visible { outline: 2px solid var(--color-brand-700); outline-offset: 2px; }
   button, [role="button"] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   input, textarea, select { font: inherit; }
@@ -61,10 +61,10 @@
 }
 
 @layer components {
-  .card { @apply min-w-0 rounded-xl3 bg-cream shadow-soft; }
+  .card { @apply min-w-0 rounded-xl3 bg-white ring-1 ring-line shadow-soft; }
   .field-input {
     @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70
-      transition-colors duration-150 outline-none focus:border-navy-500 focus:ring-4 focus:ring-navy-100
+      transition-colors duration-150 outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100
       disabled:bg-mist/60 disabled:text-muted;
   }
   .scrollbar-none { scrollbar-width: none; }
@@ -78,7 +78,7 @@
 .animate-fade-in { animation: fade-in 180ms ease-out both; }
 .animate-sheet-in { animation: sheet-in 220ms cubic-bezier(.2,.8,.2,1) both; }
 .skeleton {
-  background: linear-gradient(90deg, #F1E7D9 0px, #FAF4EB 120px, #F1E7D9 240px);
+  background: linear-gradient(90deg, #EFEFEF 0px, #F8F8F8 120px, #EFEFEF 240px);
   background-size: 800px 100%;
   animation: shimmer 1.4s linear infinite;
 }

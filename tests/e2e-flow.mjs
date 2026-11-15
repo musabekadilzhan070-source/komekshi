@@ -523,6 +523,163 @@ await step('Организатор: басты бет, оқушылар, ста�
   await shot(O.p, '24-organizer-stats');
 });
 
+await step('Екінші оқушы қайта өтініш жібереді → куратор қабылдайды', async () => {
+  await S2.p.reload();
+  await S2.p.getByRole('radio', { name: new RegExp(CUR.name) }).click();
+  await S2.p.getByRole('button', { name: /Өтінішті қайта жіберу/ }).click();
+  await A.p.goto(`${BASE}/curator/requests`);
+  const card = A.p.locator('.card').filter({ hasText: STU2.name });
+  await card.getByRole('button', { name: 'Қабылдау' }).click();
+  await A.p.getByRole('dialog').getByRole('button', { name: 'Қабылдау' }).click();
+  await toast(A.p, /тобыңызға қабылданды/);
+  await S2.p.getByText('Өтінішіңіз қабылданды!').waitFor({ timeout: 25000 });
+});
+
+await step('Ай мен апта: куратор кезең таңдайды → оқушы ай/апта бойынша сүзеді', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('button', { name: /Жаңа тапсырма/ }).click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('kind-written').click();
+  await d.getByLabel(/Тапсырма атауы/).fill('Қазақ хандығы тақырыбын қайталау');
+  const weeks = () => d.getByTestId('period-week').locator('option').count();
+  await d.getByTestId('period-month').selectOption('2');
+  if ((await weeks()) !== 4) throw new Error('Ақпанда 4 апта болуы керек');
+  await d.getByTestId('period-month').selectOption('10');
+  if ((await weeks()) !== 5) throw new Error('Қазанда 5 апта болуы керек');
+  await d.getByTestId('period-week').selectOption('3');
+  await d.getByTestId('period-week').getByText('3-апта (15–21 қазан)').waitFor({ state: 'attached' });
+  await d.getByRole('button', { name: 'Барлығын таңдау' }).click();
+  await shot(A.p, '28-task-period');
+  await d.getByTestId('task-save').click();
+  await toast(A.p, /Тапсырма 2 оқушыға берілді/);
+
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.getByRole('tab', { name: /Барлығы/ }).click();
+  const cards = S.p.getByTestId('submission-card');
+  await cards.first().waitFor();
+  const all = await cards.count();
+  await S.p.getByTestId('filter-month').selectOption({ label: 'Қазан 2026' });
+  await cards.filter({ hasText: 'Қазақ хандығы тақырыбын қайталау' }).getByText('Қазан, 3-апта').waitFor();
+  if ((await cards.count()) !== 1) throw new Error('Қазан айында тек 1 тапсырма болуы керек');
+  await S.p.getByTestId('filter-week').selectOption('3');
+  if ((await cards.count()) !== 1) throw new Error('3-аптада 1 тапсырма болуы керек');
+  await shot(S.p, '28a-student-period-filter');
+  await S.p.getByTestId('filter-week').selectOption('2');
+  await S.p.getByText('Тапсырма жоқ').waitFor();
+  await S.p.getByTestId('filter-month').selectOption('all');
+  await cards.nth(all - 1).waitFor();
+});
+
+await step('Тест импорттау: DOCX → алдын ала қарау → түзету; XLSX, CSV, PDF оқылады → оқушы тапсырады', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('button', { name: /Жаңа тапсырма/ }).click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('kind-test').click();
+  await d.getByLabel(/Тапсырма атауы/).fill('Импорт тесті (DOCX)');
+  await d.getByTestId('open-builder').click();
+  const b = A.p.getByRole('dialog').nth(1);
+  await b.getByTestId('import-open').click();
+  const im = A.p.getByRole('dialog').last();
+  await im.getByTestId('import-file').setInputFiles('./tests/fixtures/import-test.docx');
+  await im.getByTestId('import-summary').waitFor({ timeout: 30000 });
+  if ((await im.getByTestId('import-item').count()) !== 4) throw new Error('DOCX: 4 сұрақ күтілді');
+  await im.getByTestId('import-unread').getByText('Қазақстан тарихы — импорт тесті').waitFor();
+  await im.getByTestId('import-item').nth(3).getByText(/Дұрыс жауап анықталмады/).waitFor();
+  await im.getByTestId('import-item').nth(0).getByText('✓ 1845').waitFor();
+  await im.getByTestId('import-item').nth(1).getByText('Қара сөздер').waitFor();
+  await shot(A.p, '29-import-preview-docx');
+  await im.getByTestId('import-apply').click();
+  await A.p.getByTestId('import-summary').waitFor({ state: 'detached', timeout: 20000 });
+  const card = (i) => b.getByTestId('question-card').nth(i);
+  if ((await b.getByTestId('question-card').count()) !== 4) throw new Error('Редакторда 4 сұрақ болуы керек');
+  await card(2).getByRole('img', { name: 'Сұрақ суреті' }).waitFor({ timeout: 15000 });
+  await b.getByTestId('flag-summary').waitFor();
+  await b.getByTestId('test-save').click();
+  await b.getByText(/түзетуді қажет етеді \(алғашқысы — 4-сұрақ\)/).waitFor();
+  await card(3).getByRole('button', { name: '1-нұсқаны дұрыс деп белгілеу' }).click();
+  await b.getByTestId('flag-summary').waitFor({ state: 'detached' });
+  await shot(A.p, '30-import-in-builder');
+  for (const [f, n, bad] of [['import-test.xlsx', 4, 0], ['import-test.csv', 3, 1], ['import-test.pdf', 2, 0]]) {
+    await b.getByTestId('import-open').click();
+    const x = A.p.getByRole('dialog', { name: 'Тестті файлдан импорттау' });
+    await x.getByTestId('import-file').setInputFiles(`./tests/fixtures/${f}`);
+    await x.getByTestId('import-summary').waitFor({ timeout: 30000 });
+    const got = await x.getByTestId('import-item').count();
+    const flagged = await x.getByTestId('import-item').filter({ hasNotText: 'дайын' }).count();
+    if (got !== n || flagged !== bad) throw new Error(`${f}: ${got} сұрақ (${flagged} қате), күтілді ${n} (${bad})`);
+    if (f.endsWith('csv')) await shot(A.p, '29b-import-preview-csv');
+    await x.getByRole('button', { name: 'Бас тарту' }).click();
+    await x.waitFor({ state: 'detached' });
+  }
+  await b.getByTestId('test-save').click();
+  await d.getByTestId('test-summary').getByText('4 сұрақ · 4 ұпай').waitFor();
+  await d.getByRole('button', { name: 'Барлығын таңдау' }).click();
+  await d.getByTestId('task-save').getByText('Сақтау және оқушыға жіберу').waitFor();
+  await d.getByTestId('task-save').click();
+  await toast(A.p, /Тапсырма 2 оқушыға берілді/);
+
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.getByRole('tab', { name: /Орындалатын/ }).click();
+  await S.p.locator('main').getByText('Импорт тесті (DOCX)').first().click();
+  await S.p.getByRole('dialog').getByTestId('start-test').click();
+  const r = S.p.getByRole('dialog').last();
+  const q = () => r.getByTestId('runner-question');
+  await q().getByRole('radio', { name: /1845/ }).click();
+  await r.getByTestId('next-q').click();
+  await q().getByLabel('Абай — сәйкес жауап').selectOption({ label: 'Қара сөздер' });
+  await q().getByLabel('Мағжан — сәйкес жауап').selectOption({ label: 'Батыр Баян' });
+  await r.getByTestId('next-q').click();
+  await q().getByRole('img', { name: 'Сұрақ суреті' }).waitFor({ timeout: 15000 });
+  await q().getByRole('radio', { name: /Қою көк/ }).click();
+  await r.getByTestId('next-q').click();
+  await q().getByRole('radio', { name: /екі/ }).click();
+  await r.getByTestId('finish-test').click();
+  await r.getByTestId('test-score').getByText('3 / 4 ұпай').waitFor({ timeout: 15000 });
+  await shot(S.p, '30a-student-import-result');
+  await r.getByRole('button', { name: 'Жабу' }).last().click();
+});
+
+await step('Куратор тапсырманы бір оқушыдан, сосын бәрінен өшіреді → оқушыда жоғалады → организатор архивте көреді', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('tab', { name: 'Мен берген тапсырмалар' }).click();
+  const t = A.p.getByTestId('catalog-task').filter({ hasText: 'Қазақ хандығы тақырыбын қайталау' });
+  await t.getByRole('button', { name: /әрекеттері/ }).click();
+  await A.p.getByTestId('task-delete').click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('delete-all').waitFor();
+  await shot(A.p, '31-delete-options');
+  await d.getByRole('button', { name: `${STU2.name} оқушысынан өшіру` }).click();
+  await d.getByText(/Басқа оқушыларда қала береді/).waitFor();
+  await d.getByTestId('confirm-delete').click();
+  await toast(A.p, /оқушысынан өшірілді/);
+  await t.getByText(`${STU2.name} ·`).waitFor({ state: 'detached' });
+
+  await S2.p.goto(`${BASE}/student/tasks`);
+  await S2.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await S2.p.locator('main').getByText('Импорт тесті (DOCX)').first().waitFor();
+  if (await S2.p.locator('main').getByText('Қазақ хандығы тақырыбын қайталау').count()) throw new Error('Өшірілген тапсырма оқушыда көрінбеуі керек');
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await S.p.locator('main').getByText('Қазақ хандығы тақырыбын қайталау').first().waitFor();
+
+  await t.getByRole('button', { name: /әрекеттері/ }).click();
+  await A.p.getByTestId('task-delete').click();
+  await d.getByText(/барлық оқушыдан/).waitFor();
+  await d.getByTestId('confirm-delete').click();
+  await toast(A.p, /барлық оқушыдан өшірілді/);
+  await t.waitFor({ state: 'detached' });
+  // оқушы бетін жаңартпай-ақ тапсырма жоғалады (хабарлама арқылы)
+  await S.p.locator('main').getByText('Қазақ хандығы тақырыбын қайталау').first().waitFor({ state: 'detached', timeout: 15000 });
+
+  await O.p.goto(`${BASE}/organizer/archive`);
+  const a = O.p.getByTestId('archive-task').filter({ hasText: 'Қазақ хандығы тақырыбын қайталау' });
+  await a.getByText('Барлық оқушыдан өшірілген').waitFor();
+  await a.getByRole('button').first().click();
+  await a.getByText(STU2.name).waitFor();
+  await a.getByText(STU.name).waitFor();
+  await shot(O.p, '32-organizer-archive');
+});
+
 await step('Мобильді нұсқа: оқушы кабинеті', async () => {
   const M = await ctx(true);
   await login(M.p, STU);

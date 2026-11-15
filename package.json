@@ -6,12 +6,13 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:db": "node --test --test-concurrency=1 tests/db-security.test.mjs tests/db-tasks-v2.test.mjs",
+    "test:db": "node --test --test-concurrency=1 tests/db-security.test.mjs tests/db-tasks-v2.test.mjs tests/db-tasks-v3.test.mjs",
     "create-organizer": "node scripts/create-organizer.mjs"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^26.6.6",
+    "@types/papaparse": "5.5.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "postcss": "^8.5.33",
@@ -25,9 +26,13 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.73.0",
+    "mammoth": "1.13.0",
     "next": "^15.5.29",
+    "papaparse": "5.7.0",
+    "pdfjs-dist": "6.4.299",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "read-excel-file": "9.3.14",
     "recharts": "^3.10.1"
   },
   "private": true

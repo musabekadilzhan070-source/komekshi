@@ -19,11 +19,11 @@ export default function OrganizerHome() {
 
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-[28px] bg-navy-900 p-5 text-white sm:p-7">
-        <Ornament kind="koshkar" className="absolute -top-10 -right-10 size-60 text-mist/[0.07] sm:size-72" strokeWidth={1.4} />
+      <section className="relative overflow-hidden rounded-[28px] bg-brand-900 p-5 text-white sm:p-7">
+        <Ornament kind="koshkar" className="absolute top-5 right-5 size-10 text-white/20 sm:size-12" strokeWidth={1.3} />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm text-mist/70">{longDate(todayISO())}</p>
+            <p className="text-sm text-white/70">{longDate(todayISO())}</p>
             <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">Басқару панелі</h1>
             <p className="mt-1 text-sm text-white/75">{me.full_name} · Организатор</p>
           </div>
@@ -58,7 +58,7 @@ export default function OrganizerHome() {
             </Card>
           </div>
           <Card className="p-4 sm:p-6">
-            <SectionTitle title="Кураторлар бойынша" subtitle="Оқушылар саны және орташа апталық прогресс" action={<Link href="/organizer/curators" className="text-sm font-semibold text-navy-700 hover:underline">Кураторлар</Link>} />
+            <SectionTitle title="Кураторлар бойынша" subtitle="Оқушылар саны және орташа апталық прогресс" action={<Link href="/organizer/curators" className="text-sm font-semibold text-brand-700 hover:underline">Кураторлар</Link>} />
             {perCurator.length ? (
               <Bars data={perCurator} x="name" layout="vertical" height={Math.max(200, perCurator.length * 44 + 40)}
                 bars={[{ key: 'students', name: 'Оқушылар' }, { key: 'progress', name: 'Орт. прогресс, %' }]} />

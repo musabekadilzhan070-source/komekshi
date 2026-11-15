@@ -91,7 +91,7 @@ function ShellInner({ account, children }: { account: Account; children: React.R
     <div className="min-h-dvh lg:p-4">
       <div className="mx-auto flex max-w-[1680px] gap-4">
         {/* ---------- Сол жақ навигация (планшет және компьютер) ---------- */}
-        <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] shrink-0 flex-col rounded-[28px] bg-navy-900 text-white md:my-4 md:ml-4 md:flex md:w-[84px] lg:my-0 lg:ml-0 lg:w-[248px]">
+        <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] shrink-0 flex-col rounded-[28px] bg-brand-900 text-white md:my-4 md:ml-4 md:flex md:w-[84px] lg:my-0 lg:ml-0 lg:w-[248px]">
           <div className="flex h-20 items-center justify-center px-5 lg:justify-start">
             <Link href={root} aria-label="KÓMEKSHI басты бет">
               <Logo light compactOnTablet />
@@ -110,23 +110,23 @@ function ShellInner({ account, children }: { account: Account; children: React.R
                   className={clsx(
                     'group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-150',
                     'justify-center lg:justify-start',
-                    active ? 'bg-mist text-navy-900 shadow-sm' : 'text-white/75 hover:bg-white/10 hover:text-white',
+                    active ? 'bg-white text-brand-900 shadow-sm' : 'text-white/75 hover:bg-white/10 hover:text-white',
                   )}
                 >
-                  <item.icon className={clsx('size-5 shrink-0', active ? 'text-navy-700' : '')} />
+                  <item.icon className={clsx('size-5 shrink-0', active ? 'text-brand-700' : '')} />
                   <span className="hidden truncate lg:inline">{item.label}</span>
                   {!!count && (
                     <span className={clsx(
                       'ml-auto hidden min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold lg:inline',
-                      active ? 'bg-navy-700 text-white' : 'bg-sand-300 text-navy-950',
+                      active ? 'bg-brand-700 text-white' : 'bg-white text-brand-900',
                     )}>{count}</span>
                   )}
-                  {!!count && <span className="absolute top-1.5 right-2 size-2 rounded-full bg-sand-300 lg:hidden" />}
+                  {!!count && <span className="absolute top-1.5 right-2 size-2 rounded-full bg-white lg:hidden" />}
                 </Link>
               );
             })}
           </nav>
-          <OrnamentBand className="mx-auto hidden h-5 px-8 text-mist/[0.14] lg:flex" />
+          <OrnamentBand className="hidden px-6 text-white/25 lg:flex" />
           <div className="space-y-2 p-3">
             <Link
               href={`${root}/profile`}
@@ -136,7 +136,7 @@ function ShellInner({ account, children }: { account: Account; children: React.R
                 path === `${root}/profile` && 'bg-white/10',
               )}
             >
-              <Avatar name={account.full_name} size={36} className="!bg-sand-300 !text-navy-950" />
+              <Avatar name={account.full_name} size={36} className="!bg-white !text-brand-900" />
               <span className="hidden min-w-0 lg:block">
                 <span className="block truncate text-[13px] font-bold">{account.full_name}</span>
                 <span className="block text-[11px] text-white/60">{ROLE_LABEL[account.role]}</span>
@@ -157,7 +157,7 @@ function ShellInner({ account, children }: { account: Account; children: React.R
         <div className="flex min-w-0 flex-1 gap-4">
           <div className="min-w-0 flex-1">
             {/* Мобильді жоғарғы панель */}
-            <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-line/70 bg-mist/90 px-4 py-3 backdrop-blur md:hidden">
+            <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-line/70 bg-white/90 px-4 py-3 backdrop-blur md:hidden">
               <Link href={root} aria-label="Басты бет"><Logo /></Link>
               <div className="flex items-center gap-2">
                 <BellButton href={`${root}/notifications`} />
@@ -168,7 +168,7 @@ function ShellInner({ account, children }: { account: Account; children: React.R
             {/* Планшет/компьютер жоғарғы жолағы */}
             <div className="hidden items-center justify-between gap-4 px-6 pt-6 md:flex lg:px-2 lg:pt-2">
               <div className="flex items-center gap-2 text-sm text-muted">
-                <CalendarDays className="size-4 text-navy-700" />
+                <CalendarDays className="size-4 text-brand-700" />
                 <span className="font-medium">Бүгін: {longDate(todayISO())}</span>
               </div>
               <div className="flex items-center gap-2 xl:hidden">
@@ -200,16 +200,16 @@ function ShellInner({ account, children }: { account: Account; children: React.R
                 aria-current={active ? 'page' : undefined}
                 className="relative flex flex-col items-center gap-1 rounded-2xl py-1.5 text-[10px] font-semibold"
               >
-                <span className={clsx('flex h-8 w-12 items-center justify-center rounded-full transition-colors', active ? 'bg-navy-900 text-white' : 'text-navy-900/70')}>
+                <span className={clsx('flex h-8 w-12 items-center justify-center rounded-full transition-colors', active ? 'bg-brand-900 text-white' : 'text-ink/70')}>
                   <item.icon className="size-[19px]" />
                 </span>
-                <span className={clsx('max-w-full truncate', active ? 'text-navy-900' : 'text-muted')}>{item.short ?? item.label}</span>
-                {!!count && <span className="absolute top-1 right-3 size-2 rounded-full bg-navy-700" />}
+                <span className={clsx('max-w-full truncate', active ? 'text-brand-900' : 'text-muted')}>{item.short ?? item.label}</span>
+                {!!count && <span className="absolute top-1 right-3 size-2 rounded-full bg-brand-700" />}
               </Link>
             );
           })}
           <button onClick={() => setMenuOpen(true)} className="flex flex-col items-center gap-1 rounded-2xl py-1.5 text-[10px] font-semibold text-muted">
-            <span className="flex h-8 w-12 items-center justify-center rounded-full text-navy-900/70"><Menu className="size-[19px]" /></span>
+            <span className="flex h-8 w-12 items-center justify-center rounded-full text-ink/70"><Menu className="size-[19px]" /></span>
             Мәзір
           </button>
         </div>
@@ -217,11 +217,11 @@ function ShellInner({ account, children }: { account: Account; children: React.R
 
       {menuOpen && (
         <div className="fixed inset-0 z-[80] md:hidden" role="dialog" aria-modal="true" aria-label="Мәзір">
-          <div className="absolute inset-0 bg-navy-950/45" onClick={() => setMenuOpen(false)} />
-          <div className="animate-sheet-in safe-bottom absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[28px] bg-navy-900 p-4 text-white">
+          <div className="absolute inset-0 bg-brand-950/45" onClick={() => setMenuOpen(false)} />
+          <div className="animate-sheet-in safe-bottom absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[28px] bg-brand-900 p-4 text-white">
             <div className="mb-3 flex items-center justify-between px-1">
               <div className="flex min-w-0 items-center gap-3">
-                <Avatar name={account.full_name} size={40} className="!bg-sand-300 !text-navy-950" />
+                <Avatar name={account.full_name} size={40} className="!bg-white !text-brand-900" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">{account.full_name}</p>
                   <p className="text-xs text-white/60">{ROLE_LABEL[account.role]}</p>
@@ -239,11 +239,11 @@ function ShellInner({ account, children }: { account: Account; children: React.R
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={clsx('flex items-center gap-2.5 rounded-2xl px-3 py-3 text-[13px] font-semibold', active ? 'bg-white text-navy-900' : 'bg-white/10 text-white')}
+                    className={clsx('flex items-center gap-2.5 rounded-2xl px-3 py-3 text-[13px] font-semibold', active ? 'bg-white text-brand-900' : 'bg-white/10 text-white')}
                   >
                     <item.icon className="size-[18px] shrink-0" />
                     <span className="min-w-0 flex-1 leading-tight">{item.label}</span>
-                    {!!count && <span className="rounded-full bg-sand-300 px-1.5 text-[10px] font-bold text-navy-950">{count}</span>}
+                    {!!count && <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-brand-900">{count}</span>}
                   </Link>
                 );
               })}
@@ -262,10 +262,9 @@ function RightPanel({ account, root }: { account: Account; root: string }) {
   const { items, unread, markAll, loading } = useNotifications();
   return (
     <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] w-[320px] shrink-0 flex-col gap-4 xl:flex">
-      <div className="relative overflow-hidden rounded-[28px] bg-navy-900 p-5 text-white">
-        <Ornament kind="tuietaban" className="absolute -right-6 -bottom-6 size-32 text-mist/[0.07]" strokeWidth={2} />
+      <div className="relative overflow-hidden rounded-[28px] bg-brand-900 p-5 text-white">
         <div className="relative flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-wide text-sand-300 uppercase">Бүгін</p>
+          <p className="text-xs font-semibold tracking-wide text-white/75 uppercase">Бүгін</p>
           <BellButton href={`${root}/notifications`} light />
         </div>
         <p className="mt-2 text-xl font-extrabold leading-tight">{longDate(todayISO())}</p>
@@ -285,11 +284,11 @@ function RightPanel({ account, root }: { account: Account; root: string }) {
 
       <div className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-cream p-4 shadow-soft">
         <div className="mb-2 flex items-center justify-between px-1">
-          <p className="text-sm font-bold text-navy-900">
-            Хабарламалар {unread > 0 && <span className="ml-1 rounded-full bg-navy-700 px-2 py-0.5 text-[10px] text-white">{unread}</span>}
+          <p className="text-sm font-bold text-ink">
+            Хабарламалар {unread > 0 && <span className="ml-1 rounded-full bg-brand-700 px-2 py-0.5 text-[10px] text-white">{unread}</span>}
           </p>
           {unread > 0 && (
-            <button onClick={markAll} className="text-[11px] font-semibold text-navy-700 hover:underline">Барлығын оқу</button>
+            <button onClick={markAll} className="text-[11px] font-semibold text-brand-700 hover:underline">Барлығын оқу</button>
           )}
         </div>
         <div className="scrollbar-none -mx-1 flex-1 space-y-1 overflow-y-auto px-1">
@@ -297,14 +296,14 @@ function RightPanel({ account, root }: { account: Account; root: string }) {
             <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-14 rounded-2xl" />)}</div>
           ) : items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-              <Bell className="mb-2 size-6 text-sand-300" />
+              <Bell className="mb-2 size-6 text-white/75" />
               <p className="text-xs text-muted">Әзірге хабарлама жоқ</p>
             </div>
           ) : (
             items.slice(0, 12).map((n) => <NotificationRow key={n.id} n={n} compact />)
           )}
         </div>
-        <Link href={`${root}/notifications`} className="mt-2 rounded-2xl bg-white py-2.5 text-center text-xs font-semibold text-navy-900 ring-1 ring-line hover:bg-navy-50">
+        <Link href={`${root}/notifications`} className="mt-2 rounded-2xl bg-white py-2.5 text-center text-xs font-semibold text-ink ring-1 ring-line hover:bg-brand-50">
           Барлық хабарламалар
         </Link>
       </div>

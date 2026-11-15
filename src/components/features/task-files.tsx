@@ -63,13 +63,13 @@ export function FileUploader({
         onDrop={(e) => { e.preventDefault(); setDrag(false); if (!disabled) handle(e.dataTransfer.files); }}
         className={clsx(
           'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed px-4 py-5 text-center transition-colors',
-          drag ? 'border-navy-700 bg-navy-50' : 'border-sand-300 bg-white/70 hover:border-navy-300',
+          drag ? 'border-brand-700 bg-brand-50' : 'border-brand-200 bg-white/70 hover:border-brand-300',
           disabled && 'pointer-events-none opacity-50',
         )}
       >
         <input ref={input} type="file" multiple accept={accept} className="sr-only" disabled={disabled} onChange={(e) => handle(e.target.files)} />
-        <UploadCloud className="size-6 text-navy-700" />
-        <span className="text-sm font-bold text-navy-900">{label}</span>
+        <UploadCloud className="size-6 text-brand-700" />
+        <span className="text-sm font-bold text-ink">{label}</span>
         <span className="text-xs text-muted">{hint ?? `PDF, Word, PowerPoint, Excel, JPG, PNG · әрқайсысы ${maxMb} МБ-қа дейін`}</span>
       </label>
       {pending.map((p) => (
@@ -81,11 +81,11 @@ export function FileUploader({
             </div>
           ) : (
             <>
-              <div className="mb-1.5 flex justify-between gap-2 font-semibold text-navy-900">
+              <div className="mb-1.5 flex justify-between gap-2 font-semibold text-ink">
                 <span className="truncate">{p.name}</span><span>{p.progress}%</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-navy-100">
-                <div className="h-full rounded-full bg-navy-900 transition-[width]" style={{ width: `${p.progress}%` }} />
+              <div className="h-1.5 overflow-hidden rounded-full bg-brand-100">
+                <div className="h-full rounded-full bg-brand-900 transition-[width]" style={{ width: `${p.progress}%` }} />
               </div>
             </>
           )}
@@ -121,20 +121,20 @@ export function FileList({
           const viewable = isPdf(f.mime_type) || isImage(f.mime_type);
           return (
             <li key={f.storage_path} className="flex min-w-0 items-center gap-3 rounded-2xl bg-white p-2.5 ring-1 ring-line">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-mist">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-900 text-white">
                 <FileIcon mime={f.mime_type} className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-navy-900" title={f.file_name}>{f.file_name}</span>
+                <span className="block truncate text-sm font-semibold text-ink" title={f.file_name}>{f.file_name}</span>
                 <span className="block text-[11px] text-muted">{fileKindLabel(f.mime_type)} · {formatSize(f.size_bytes)}</span>
               </span>
               <span className="flex shrink-0 items-center gap-1">
                 {viewable && (
                   <button type="button" onClick={() => setPreview(f)} aria-label={`${f.file_name} ашу`} title="Ашу"
-                    className="flex size-9 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50"><Eye className="size-4" /></button>
+                    className="flex size-9 items-center justify-center rounded-full text-ink hover:bg-brand-50"><Eye className="size-4" /></button>
                 )}
                 <button type="button" onClick={() => download(f)} aria-label={`${f.file_name} жүктеп алу`} title="Жүктеп алу"
-                  className="flex size-9 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50">
+                  className="flex size-9 items-center justify-center rounded-full text-ink hover:bg-brand-50">
                   {busy === f.storage_path ? <Spinner className="size-4" /> : <Download className="size-4" />}
                 </button>
                 {onRemove && (
@@ -159,7 +159,7 @@ function FilePreview({ file, onClose, onDownload }: { file: FileMeta; onClose: (
   }, [file.storage_path]);
   return (
     <Modal open onClose={onClose} size="xl" title={file.file_name} subtitle={`${fileKindLabel(file.mime_type)} · ${formatSize(file.size_bytes)}`}
-      footer={<button type="button" onClick={onDownload} className="inline-flex h-11 items-center gap-2 rounded-full bg-navy-900 px-6 text-sm font-semibold text-white"><Download className="size-4" /> Жүктеп алу</button>}>
+      footer={<button type="button" onClick={onDownload} className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-900 px-6 text-sm font-semibold text-white"><Download className="size-4" /> Жүктеп алу</button>}>
       {err ? <p className="text-sm text-bad">{err}</p> : !url ? (
         <div className="flex h-64 items-center justify-center"><Spinner /></div>
       ) : isPdf(file.mime_type) ? (
@@ -187,5 +187,5 @@ export function SignedImage({ path, alt, className }: { path: string; alt: strin
 
 export function AttachmentCount({ n }: { n: number }) {
   if (!n) return null;
-  return <span className="inline-flex items-center gap-1 rounded-full bg-sand-100 px-2.5 py-1 text-[11px] font-semibold text-navy-900"><Paperclip className="size-3" /> {n} файл</span>;
+  return <span className="inline-flex items-center gap-1 rounded-full bg-mist px-2.5 py-1 text-[11px] font-semibold text-ink"><Paperclip className="size-3" /> {n} файл</span>;
 }

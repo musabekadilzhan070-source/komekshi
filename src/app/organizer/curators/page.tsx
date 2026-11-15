@@ -45,7 +45,7 @@ export default function OrganizerCuratorsPage() {
               <div className="flex items-start gap-3">
                 <Avatar name={c.full_name} size={48} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold text-navy-900">{c.full_name}</p>
+                  <p className="truncate font-bold text-ink">{c.full_name}</p>
                   <p className="truncate text-xs text-muted">{c.email}</p>
                   {c.contact_info && <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted"><Phone className="size-3" /> {c.contact_info}</p>}
                 </div>
@@ -61,7 +61,7 @@ export default function OrganizerCuratorsPage() {
                 <Badge>{c.trackers_created} трекер</Badge>
                 <Badge>{c.videos_uploaded} видео</Badge>
                 {c.requests_pending > 0 && <Badge tone="warn">{c.requests_pending} өтініш күтуде</Badge>}
-                {c.reports_pending > 0 && <Badge tone="navy">{c.reports_pending} есеп тексерілмеген</Badge>}
+                {c.reports_pending > 0 && <Badge tone="brand">{c.reports_pending} есеп тексерілмеген</Badge>}
               </div>
               <p className="mt-3 text-[11px] text-muted">Мақұлданған: {shortDate(c.approved_at)} · Соңғы белсенділік: {relativeTime(c.last_active_at)}</p>
               <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
@@ -89,5 +89,5 @@ export default function OrganizerCuratorsPage() {
 }
 
 function Mini({ v, l }: { v: React.ReactNode; l: string }) {
-  return <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-navy-900">{v}</p><p className="text-[10px] text-muted">{l}</p></div>;
+  return <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-ink">{v}</p><p className="text-[10px] text-muted">{l}</p></div>;
 }

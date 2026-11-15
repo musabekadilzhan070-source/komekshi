@@ -52,9 +52,9 @@ function Inner() {
               const isCurrent = today >= t.week_start && today <= t.week_end;
               return (
                 <button key={t.id} onClick={() => setSel(t.id)}
-                  className={clsx('w-[230px] shrink-0 rounded-3xl p-4 text-left transition-all xl:w-auto', t.id === sel ? 'bg-navy-900 text-white shadow-lift' : 'bg-cream shadow-soft hover:shadow-lift')}>
+                  className={clsx('w-[230px] shrink-0 rounded-3xl p-4 text-left transition-all xl:w-auto', t.id === sel ? 'bg-brand-900 text-white shadow-lift' : 'bg-cream shadow-soft hover:shadow-lift')}>
                   <div className="flex items-center justify-between gap-2">
-                    <p className={clsx('text-[11px] font-semibold', t.id === sel ? 'text-sand-300' : 'text-navy-700')}>{weekRange(t.week_start)}</p>
+                    <p className={clsx('text-[11px] font-semibold', t.id === sel ? 'text-white/75' : 'text-brand-700')}>{weekRange(t.week_start)}</p>
                     {isCurrent && <Badge tone={t.id === sel ? 'soft' : 'ok'}>Ағымдағы</Badge>}
                   </div>
                   <p className="mt-1 truncate font-bold">{t.title}</p>

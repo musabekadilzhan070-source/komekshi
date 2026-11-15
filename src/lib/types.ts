@@ -68,6 +68,9 @@ export interface Task {
   external_url: string | null;
   config: TaskConfig;
   time_limit_minutes: number | null;
+  period_year: number;
+  period_month: number;
+  period_week: number;
 }
 
 export interface StoredFile {

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import {
-  ArrowDown, ArrowUp, CheckSquare, Copy, Image as ImageIcon, ListChecks, ListOrdered, Plus, Shuffle, SquareStack, Text, Timer, Trash2, X,
+  AlertTriangle, ArrowDown, ArrowUp, CheckSquare, Copy, FileUp, Image as ImageIcon, ListChecks, ListOrdered, PencilLine, Plus, Shuffle, SquareStack, Text, Timer, Trash2, X,
 } from 'lucide-react';
 import { QUESTION_TYPE } from '@/lib/labels';
 import type { Opt, QuestionDraft, QuestionType } from '@/lib/types';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { Badge, EmptyState } from '@/components/ui/misc';
 import { FileUploader, SignedImage } from './task-files';
+import { TestImportDialog } from './test-import';
 
 const rid = () => Math.random().toString(36).slice(2, 8);
 const opt = (text = ''): Opt => ({ id: rid(), text });
@@ -99,8 +100,18 @@ export function TestBuilder({
   const [minutes, setMinutes] = useState<string>(initialMinutes ? String(initialMinutes) : '');
   const [err, setErr] = useState<string | null>(null);
   const [uploading, setUploading] = useState(0);
+  const [importing, setImporting] = useState(false);
+  // Импорттан келген, түзетуді қажет ететін сұрақтар: key → ескертулер
+  const [flags, setFlags] = useState<Record<string, string[]>>({});
+  const flagCount = Object.keys(flags).length;
+  const unflag = (key: string) => setFlags((f) => { const n = { ...f }; delete n[key]; return n; });
 
-  const update = (key: string, patch: Partial<QuestionDraft>) => { setErr(null); setQs((s) => s.map((q) => (q.key === key ? { ...q, ...patch } : q))); };
+  const update = (key: string, patch: Partial<QuestionDraft>) => {
+    setErr(null);
+    const cur = qs.find((q) => q.key === key);
+    if (cur && flags[key] && validateDraft({ ...cur, ...patch }, 0) === null) unflag(key);
+    setQs((s) => s.map((q) => (q.key === key ? { ...q, ...patch } : q)));
+  };
   const move = (i: number, dir: -1 | 1) => setQs((s) => {
     const j = i + dir; if (j < 0 || j >= s.length) return s;
     const c = [...s]; [c[i], c[j]] = [c[j], c[i]]; return c;
@@ -110,6 +121,10 @@ export function TestBuilder({
 
   const save = () => {
     if (qs.length === 0) return setErr('Тестке кемінде бір сұрақ қосыңыз.');
+    if (flagCount) {
+      const i = qs.findIndex((q) => flags[q.key]);
+      return setErr(`Импортталған ${flagCount} сұрақ түзетуді қажет етеді (алғашқысы — ${i + 1}-сұрақ). Түзетіңіз, өшіріңіз немесе «Тексердім» батырмасын басыңыз.`);
+    }
     for (let i = 0; i < qs.length; i++) { const e = validateDraft(qs[i], i); if (e) return setErr(e); }
     const m = minutes.trim() ? Number(minutes) : null;
     if (m != null && !(Number.isInteger(m) && m >= 1 && m <= 600)) return setErr('Тест уақыты 1–600 минут аралығында болуы керек.');
@@ -126,18 +141,38 @@ export function TestBuilder({
       )}
     >
       <fieldset disabled={locked} className="space-y-5">
-        <div className="grid gap-3 rounded-3xl bg-navy-900 p-4 text-white sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
+        {!locked && (
+          <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Тест құрастыру тәсілі">
+            <a href="#add-question" className="flex items-center gap-3 rounded-2xl bg-white p-3.5 ring-1 ring-line transition hover:ring-brand-300">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-900"><PencilLine className="size-5" /></span>
+              <span><span className="block text-sm font-bold text-ink">Қолмен құрастыру</span>
+                <span className="block text-xs text-muted">Сұрақтарды бір-бірден қосу</span></span>
+            </a>
+            <button type="button" onClick={() => setImporting(true)} data-testid="import-open"
+              className="flex items-center gap-3 rounded-2xl bg-white p-3.5 text-left ring-1 ring-line transition hover:ring-brand-300">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-900 text-white"><FileUp className="size-5" /></span>
+              <span><span className="block text-sm font-bold text-ink">Дайын файлдан импорттау</span>
+                <span className="block text-xs text-muted">DOCX, XLSX, CSV, PDF</span></span>
+            </button>
+          </div>
+        )}
+        {flagCount > 0 && (
+          <p role="status" className="flex items-start gap-2 rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad" data-testid="flag-summary">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" /> Импортталған {flagCount} сұрақ түзетуді қажет етеді. Олар қызыл жиекпен белгіленген.
+          </p>
+        )}
+        <div className="grid gap-3 rounded-3xl bg-brand-900 p-4 text-white sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
           <div>
             <p className="text-sm font-bold">Тест параметрлері</p>
             <p className="mt-0.5 text-xs text-white/70">Сұрақтар саны мен ретін өзіңіз анықтайсыз. Нұсқалар оқушыға аралас көрсетіледі (сәйкестендіру мен ретте).</p>
           </div>
           <label className="flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm">
-            <Timer className="size-4 text-sand-300" />
+            <Timer className="size-4 text-white/75" />
             <span className="whitespace-nowrap">Уақыты</span>
             <input
               type="number" min={1} max={600} inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)}
               placeholder="шексіз" aria-label="Тест уақыты (минут)"
-              className="w-20 rounded-xl bg-white px-2 py-1.5 text-center text-sm font-bold text-navy-900 outline-none"
+              className="w-20 rounded-xl bg-white px-2 py-1.5 text-center text-sm font-bold text-ink outline-none"
             />
             <span className="text-white/70">мин</span>
           </label>
@@ -147,26 +182,26 @@ export function TestBuilder({
 
         {qs.map((q, i) => (
           <QuestionCard
-            key={q.key} q={q} index={i} count={qs.length} uid={uid}
+            key={q.key} q={q} index={i} count={qs.length} uid={uid} flags={flags[q.key]} onFlagOk={() => unflag(q.key)}
             onChange={(p) => update(q.key, p)} onMove={(d) => move(i, d)}
             onDuplicate={() => setQs((s) => [...s.slice(0, i + 1), { ...structuredClone(q), key: rid() }, ...s.slice(i + 1)])}
-            onRemove={() => setQs((s) => s.filter((x) => x.key !== q.key))}
+            onRemove={() => { unflag(q.key); setQs((s) => s.filter((x) => x.key !== q.key)); }}
             onUploading={(b) => setUploading((n) => n + (b ? 1 : -1))}
           />
         ))}
 
         {!locked && (
-          <div className="rounded-3xl border-2 border-dashed border-sand-300 p-4">
-            <p className="mb-3 text-sm font-bold text-navy-900">Сұрақ қосу</p>
+          <div id="add-question" className="scroll-mt-4 rounded-3xl border-2 border-dashed border-brand-200 p-4">
+            <p className="mb-3 text-sm font-bold text-ink">Сұрақ қосу</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {(Object.keys(QUESTION_TYPE) as QuestionType[]).map((t) => {
                 const Icon = QTYPE_ICON[t];
                 return (
                   <button key={t} type="button" onClick={() => add(t)} data-testid={`add-q-${t}`}
-                    className="flex items-center gap-2.5 rounded-2xl bg-white p-3 text-left ring-1 ring-line transition hover:ring-navy-300">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-navy-100 text-navy-900"><Icon className="size-4" /></span>
+                    className="flex items-center gap-2.5 rounded-2xl bg-white p-3 text-left ring-1 ring-line transition hover:ring-brand-300">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-ink"><Icon className="size-4" /></span>
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-bold leading-tight text-navy-900">{QUESTION_TYPE[t].label}</span>
+                      <span className="block text-[13px] font-bold leading-tight text-ink">{QUESTION_TYPE[t].label}</span>
                       <span className="block truncate text-[11px] text-muted">{QUESTION_TYPE[t].hint}</span>
                     </span>
                   </button>
@@ -177,6 +212,14 @@ export function TestBuilder({
         )}
         {err && <p role="alert" className="rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad">{err}</p>}
       </fieldset>
+      {importing && (
+        <TestImportDialog uid={uid} onClose={() => setImporting(false)} onApply={(items) => {
+          setQs((s) => [...s, ...items.map((x) => x.draft)]);
+          setFlags((f) => ({ ...f, ...Object.fromEntries(items.filter((x) => x.issues.length).map((x) => [x.draft.key, x.issues])) }));
+          setImporting(false);
+          setErr(null);
+        }} />
+      )}
     </Modal>
   );
 }
@@ -185,16 +228,16 @@ function IconBtn({ label, onClick, disabled, children, danger }: { label: string
   return (
     <button type="button" onClick={onClick} disabled={disabled} aria-label={label} title={label}
       className={clsx('flex size-8 items-center justify-center rounded-full transition disabled:opacity-30',
-        danger ? 'text-muted hover:bg-bad-soft hover:text-bad' : 'text-navy-900 hover:bg-navy-50')}>
+        danger ? 'text-muted hover:bg-bad-soft hover:text-bad' : 'text-ink hover:bg-brand-50')}>
       {children}
     </button>
   );
 }
 
 function QuestionCard({
-  q, index, count, uid, onChange, onMove, onDuplicate, onRemove, onUploading,
+  q, index, count, uid, flags, onFlagOk, onChange, onMove, onDuplicate, onRemove, onUploading,
 }: {
-  q: QuestionDraft; index: number; count: number; uid: string; onChange: (p: Partial<QuestionDraft>) => void;
+  q: QuestionDraft; index: number; count: number; uid: string; flags?: string[]; onFlagOk: () => void; onChange: (p: Partial<QuestionDraft>) => void;
   onMove: (d: -1 | 1) => void; onDuplicate: () => void; onRemove: () => void; onUploading: (b: boolean) => void;
 }) {
   const Icon = QTYPE_ICON[q.qtype];
@@ -212,11 +255,18 @@ function QuestionCard({
   };
 
   return (
-    <section className="card relative overflow-hidden p-4 sm:p-5" data-testid="question-card">
+    <section className={clsx('card relative overflow-hidden p-4 sm:p-5', flags && '!ring-2 !ring-bad/60')} data-testid="question-card" data-flagged={flags ? 'true' : undefined}>
+      {flags && (
+        <div role="alert" className="mb-4 rounded-2xl bg-bad-soft p-3 text-xs text-bad">
+          <p className="flex items-center gap-1.5 font-bold"><AlertTriangle className="size-4" /> Түзету қажет (импорт)</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">{flags.map((f) => <li key={f}>{f}</li>)}</ul>
+          <button type="button" onClick={onFlagOk} className="mt-2 rounded-full bg-white px-3 py-1 font-semibold text-ink ring-1 ring-bad/25" data-testid="flag-ok">Тексердім</button>
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-navy-900 text-sm font-extrabold text-mist">{index + 1}</span>
-          <Badge tone="navy"><Icon className="size-3" /> {QUESTION_TYPE[q.qtype].label}</Badge>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-900 text-sm font-extrabold text-white">{index + 1}</span>
+          <Badge tone="brand"><Icon className="size-3" /> {QUESTION_TYPE[q.qtype].label}</Badge>
         </div>
         <div className="flex items-center gap-0.5">
           <IconBtn label="Жоғары жылжыту" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUp className="size-4" /></IconBtn>
@@ -238,7 +288,7 @@ function QuestionCard({
         </Field>
 
         <div>
-          <p className="mb-1.5 text-xs font-semibold text-navy-900">Сурет {q.qtype === 'image' ? <span className="text-bad">*</span> : <span className="font-normal text-muted">(міндетті емес)</span>}</p>
+          <p className="mb-1.5 text-xs font-semibold text-ink">Сурет {q.qtype === 'image' ? <span className="text-bad">*</span> : <span className="font-normal text-muted">(міндетті емес)</span>}</p>
           {q.image_path ? (
             <div className="relative inline-block">
               <SignedImage path={q.image_path} alt="Сұрақ суреті" className="max-h-52 ring-1 ring-line" />
@@ -253,7 +303,7 @@ function QuestionCard({
 
         {choice && (
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-navy-900">
+            <p className="mb-1.5 text-xs font-semibold text-ink">
               Жауап нұсқалары <span className="font-normal text-muted">— {multi ? 'барлық дұрыс жауапты белгілеңіз' : 'дұрыс жауапты белгілеңіз'}</span>
             </p>
             <div className="space-y-2">
@@ -263,7 +313,7 @@ function QuestionCard({
                   <div key={o.id} className={clsx('flex items-center gap-2 rounded-2xl p-1.5 pl-2 ring-1', on ? 'bg-ok-soft ring-ok/40' : 'bg-white ring-line')}>
                     <button type="button" onClick={() => toggleCorrect(o.id)} aria-pressed={on} aria-label={`${i + 1}-нұсқаны дұрыс деп белгілеу`}
                       className={clsx('flex size-7 shrink-0 items-center justify-center border-2 text-[11px] font-bold', multi ? 'rounded-lg' : 'rounded-full',
-                        on ? 'border-ok bg-ok text-white' : 'border-navy-300 text-navy-700')}>
+                        on ? 'border-ok bg-ok text-white' : 'border-brand-300 text-brand-700')}>
                       {on ? '✓' : String.fromCharCode(65 + i)}
                     </button>
                     <input value={o.text} onChange={(e) => setOpt(o.id, e.target.value)} maxLength={1000} placeholder={`${i + 1}-нұсқа`}
@@ -274,7 +324,7 @@ function QuestionCard({
               })}
             </div>
             {q.options.length < 10 && (
-              <button type="button" onClick={() => onChange({ options: [...q.options, opt()] })} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline">
+              <button type="button" onClick={() => onChange({ options: [...q.options, opt()] })} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
                 <Plus className="size-4" /> Нұсқа қосу
               </button>
             )}
@@ -283,11 +333,11 @@ function QuestionCard({
 
         {q.qtype === 'ordering' && (
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-navy-900">Элементтер <span className="font-normal text-muted">— дұрыс ретпен жазыңыз, оқушыға аралас көрсетіледі</span></p>
+            <p className="mb-1.5 text-xs font-semibold text-ink">Элементтер <span className="font-normal text-muted">— дұрыс ретпен жазыңыз, оқушыға аралас көрсетіледі</span></p>
             <div className="space-y-2">
               {q.options.map((o, i) => (
                 <div key={o.id} className="flex items-center gap-2 rounded-2xl bg-white p-1.5 pl-2 ring-1 ring-line">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-mist">{i + 1}</span>
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[11px] font-bold text-white">{i + 1}</span>
                   <input value={o.text} onChange={(e) => setOpt(o.id, e.target.value)} maxLength={1000} placeholder={`${i + 1}-оқиға / элемент`}
                     className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-sm outline-none" />
                   <IconBtn label="Жоғары" onClick={() => moveOpt(i, -1)} disabled={i === 0}><ArrowUp className="size-4" /></IconBtn>
@@ -297,7 +347,7 @@ function QuestionCard({
               ))}
             </div>
             {q.options.length < 10 && (
-              <button type="button" onClick={() => onChange({ options: [...q.options, opt()] })} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline">
+              <button type="button" onClick={() => onChange({ options: [...q.options, opt()] })} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
                 <Plus className="size-4" /> Элемент қосу
               </button>
             )}
@@ -335,7 +385,7 @@ function MatchingEditor({ q, onChange }: { q: QuestionDraft; onChange: (p: Parti
   };
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold text-navy-900">Сәйкес жұптар <span className="font-normal text-muted">— оң жақ баған оқушыға аралас көрсетіледі</span></p>
+      <p className="mb-1.5 text-xs font-semibold text-ink">Сәйкес жұптар <span className="font-normal text-muted">— оң жақ баған оқушыға аралас көрсетіледі</span></p>
       <div className="space-y-2">
         {q.left.map((l, i) => {
           const r = q.right.find((x) => x.id === q.pairs[l.id]);
@@ -345,23 +395,23 @@ function MatchingEditor({ q, onChange }: { q: QuestionDraft; onChange: (p: Parti
                 className="min-w-0 rounded-xl bg-mist/50 px-3 py-2 text-sm outline-none" />
               <SquareStack className="hidden size-4 text-sand-500 sm:block" />
               <input value={r?.text ?? ''} onChange={(e) => r && setText('right', r.id, e.target.value)} maxLength={1000} placeholder="Сәйкес жауап"
-                className="col-span-1 min-w-0 rounded-xl bg-navy-50 px-3 py-2 text-sm outline-none sm:col-span-1" />
+                className="col-span-1 min-w-0 rounded-xl bg-brand-50 px-3 py-2 text-sm outline-none sm:col-span-1" />
               <IconBtn label="Жұпты өшіру" onClick={() => removePair(l.id)} disabled={q.left.length <= 2} danger><X className="size-4" /></IconBtn>
             </div>
           );
         })}
         {extras.map((r) => (
-          <div key={r.id} className="flex items-center gap-2 rounded-2xl bg-white p-2 ring-1 ring-dashed ring-sand-300">
+          <div key={r.id} className="flex items-center gap-2 rounded-2xl bg-white p-2 ring-1 ring-dashed ring-brand-200">
             <span className="shrink-0 px-1 text-[11px] font-semibold text-muted">Артық нұсқа</span>
             <input value={r.text} onChange={(e) => setText('right', r.id, e.target.value)} maxLength={1000} placeholder="Қате (алаңдататын) нұсқа"
-              className="min-w-0 flex-1 rounded-xl bg-navy-50 px-3 py-2 text-sm outline-none" />
+              className="min-w-0 flex-1 rounded-xl bg-brand-50 px-3 py-2 text-sm outline-none" />
             <IconBtn label="Өшіру" onClick={() => onChange({ right: q.right.filter((x) => x.id !== r.id) })} danger><X className="size-4" /></IconBtn>
           </div>
         ))}
       </div>
       <div className="mt-2 flex flex-wrap gap-4">
-        {q.left.length < 10 && <button type="button" onClick={addPair} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline"><Plus className="size-4" /> Жұп қосу</button>}
-        {q.right.length < 12 && <button type="button" onClick={() => onChange({ right: [...q.right, opt()] })} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline"><Plus className="size-4" /> Артық нұсқа</button>}
+        {q.left.length < 10 && <button type="button" onClick={addPair} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"><Plus className="size-4" /> Жұп қосу</button>}
+        {q.right.length < 12 && <button type="button" onClick={() => onChange({ right: [...q.right, opt()] })} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"><Plus className="size-4" /> Артық нұсқа</button>}
       </div>
     </div>
   );

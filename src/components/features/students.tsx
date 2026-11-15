@@ -41,7 +41,7 @@ export function StudentMultiSelect({
         <button
           type="button"
           onClick={() => onChange(all ? [] : selectable.map((s) => s.id))}
-          className="ml-auto shrink-0 rounded-full bg-navy-100 px-3 py-1.5 text-xs font-semibold text-navy-900 hover:bg-navy-200"
+          className="ml-auto shrink-0 rounded-full bg-brand-100 px-3 py-1.5 text-xs font-semibold text-ink hover:bg-brand-200"
         >
           {all ? 'Барлығын алып тастау' : 'Барлығын таңдау'}
         </button>
@@ -56,9 +56,9 @@ export function StudentMultiSelect({
               key={s.id}
               disabled={dis}
               onClick={() => toggle(s.id)}
-              className={clsx('flex items-center gap-2.5 rounded-2xl px-2.5 py-2 text-left text-sm transition-colors', on ? 'bg-navy-50' : 'hover:bg-mist/60', dis && 'opacity-50')}
+              className={clsx('flex items-center gap-2.5 rounded-2xl px-2.5 py-2 text-left text-sm transition-colors', on ? 'bg-brand-50' : 'hover:bg-mist/60', dis && 'opacity-50')}
             >
-              <span className={clsx('flex size-5 shrink-0 items-center justify-center rounded-md border-2', on || dis ? 'border-navy-700 bg-navy-700 text-white' : 'border-navy-300')}>
+              <span className={clsx('flex size-5 shrink-0 items-center justify-center rounded-md border-2', on || dis ? 'border-brand-700 bg-brand-700 text-white' : 'border-brand-300')}>
                 {(on || dis) && <Check className="size-3" />}
               </span>
               <Avatar name={s.full_name} size={28} />
@@ -68,7 +68,7 @@ export function StudentMultiSelect({
           );
         })}
       </div>
-      <p className="px-2 pt-2 pb-1 text-xs text-muted">Таңдалды: <b className="text-navy-900">{value.length}</b></p>
+      <p className="px-2 pt-2 pb-1 text-xs text-muted">Таңдалды: <b className="text-ink">{value.length}</b></p>
     </div>
   );
 }

@@ -3,21 +3,22 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import {
-  CalendarClock, CheckCircle2, ClipboardList, ExternalLink, ListChecks, MessageSquare, Pencil, Play, RotateCcw, Save, Trash2, Undo2,
+  CalendarClock, CalendarRange, CheckCircle2, ClipboardList, ExternalLink, ListChecks, MessageSquare, Pencil, Play, RotateCcw, Save, Trash2, Undo2,
 } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { must, useLoad, useRealtime } from '@/lib/hooks';
 import { humanError } from '@/lib/errors';
-import { dateTime, shortDate, todayISO } from '@/lib/date';
+import { dateTime, MONTHS, periodShort, periodWeekLabel, shortDate, todayISO, weeksInMonth } from '@/lib/date';
 import { PRIORITY, SUBMISSION_STATUS, TASK_KIND } from '@/lib/labels';
 import { removeTaskFiles } from '@/lib/files';
 import type { Submission, SubmissionStatus, Task, TestAttempt, TestResult } from '@/lib/types';
 import { useAccount } from '@/components/shell/account-context';
 import { Avatar, Badge, Card, EmptyState, ErrorState, LoadingBlock, Tabs } from '@/components/ui/misc';
 import { Button } from '@/components/ui/button';
-import { ConfirmModal, Modal } from '@/components/ui/modal';
-import { Checkbox, Field, Textarea } from '@/components/ui/form';
+import { Modal } from '@/components/ui/modal';
+import { Checkbox, Field, Select, Textarea } from '@/components/ui/form';
 import { useToast } from '@/components/ui/toast';
+import { ActionMenu } from '@/components/ui/menu';
 import { KIND_ICON, TaskEditorModal } from './task-editor';
 import { AttachmentCount, FileList, FileUploader, type FileMeta } from './task-files';
 import { TestResultView, TestRunner } from './test-runner';
@@ -36,7 +37,7 @@ const attemptOf = (s: Row): Attempt | null => (Array.isArray(s.test_attempts) ? 
 
 export function KindBadge({ kind }: { kind: Task['kind'] }) {
   const Icon = KIND_ICON[kind];
-  return <Badge tone="navy"><Icon className="size-3" /> {TASK_KIND[kind].label}</Badge>;
+  return <Badge tone="brand"><Icon className="size-3" /> {TASK_KIND[kind].label}</Badge>;
 }
 
 function ScoreBadge({ a }: { a: Attempt | null }) {
@@ -62,18 +63,34 @@ export function SubmissionList({
     return must(await q) as Row[];
   }, [studentId]);
   useRealtime(['task_submissions', 'test_attempts'], () => reload(true), studentId ? `student_id=eq.${studentId}` : undefined);
+  // Куратор тапсырманы өшіргенде оқушыға хабарлама келеді — тізімді бірден жаңартамыз
+  const me = useAccount();
+  useRealtime(['notifications'], () => reload(true), `user_id=eq.${me.id}`, mode === 'student');
+
+  // Ай / апта бойынша сүзгі
+  const [month, setMonth] = useState('all');
+  const [week, setWeek] = useState('all');
+  const months = useMemo(() => {
+    const set = new Map<string, { y: number; m: number }>();
+    (data ?? []).forEach((x) => { if (x.tasks) set.set(`${x.tasks.period_year}-${x.tasks.period_month}`, { y: x.tasks.period_year, m: x.tasks.period_month }); });
+    return [...set.entries()].sort((a, b) => (b[1].y - a[1].y) || (b[1].m - a[1].m));
+  }, [data]);
+  const sel = months.find(([k]) => k === month)?.[1];
+  const inPeriod = (x: Row) => !sel || (x.tasks?.period_year === sel.y && x.tasks?.period_month === sel.m
+    && (week === 'all' || x.tasks?.period_week === Number(week)));
+  const scoped = (data ?? []).filter(inPeriod);
 
   useEffect(() => {
     if (focusId && data?.some((x) => x.id === focusId)) setOpenId(focusId);
   }, [focusId, data]);
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { active: 0, review: 0, done: 0, all: data?.length ?? 0 };
-    (data ?? []).forEach((s) => (Object.keys(FILTERS) as Filter[]).forEach((f) => { if (FILTERS[f]?.includes(s.status)) c[f]++; }));
+    const c: Record<Filter, number> = { active: 0, review: 0, done: 0, all: scoped.length };
+    scoped.forEach((s) => (Object.keys(FILTERS) as Filter[]).forEach((f) => { if (FILTERS[f]?.includes(s.status)) c[f]++; }));
     return c;
-  }, [data]);
+  }, [scoped]);
 
-  const list = (data ?? []).filter((s) => !FILTERS[filter] || FILTERS[filter]!.includes(s.status))
+  const list = scoped.filter((s) => !FILTERS[filter] || FILTERS[filter]!.includes(s.status))
     .sort((a, b) => (a.tasks?.due_date ?? '').localeCompare(b.tasks?.due_date ?? ''));
   const today = todayISO();
   const open = data?.find((s) => s.id === openId) ?? null;
@@ -91,6 +108,27 @@ export function SubmissionList({
           { value: 'all', label: 'Барлығы', count: counts.all },
         ]}
       />
+      {months.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-end gap-2" role="group" aria-label="Кезең бойынша сүзгі">
+          <label className="min-w-40 flex-1 sm:flex-none">
+            <span className="mb-1 block text-[11px] font-semibold text-muted">Ай</span>
+            <Select value={month} onChange={(e) => { setMonth(e.target.value); setWeek('all'); }} data-testid="filter-month" aria-label="Ай бойынша сүзгі">
+              <option value="all">Барлық айлар</option>
+              {months.map(([k, v]) => <option key={k} value={k}>{MONTHS[v.m - 1]} {v.y}</option>)}
+            </Select>
+          </label>
+          <label className="min-w-40 flex-1 sm:flex-none">
+            <span className="mb-1 block text-[11px] font-semibold text-muted">Апта</span>
+            <Select value={week} onChange={(e) => setWeek(e.target.value)} disabled={!sel} data-testid="filter-week" aria-label="Апта бойынша сүзгі">
+              <option value="all">Барлық апталар</option>
+              {sel && Array.from({ length: weeksInMonth(sel.y, sel.m) }, (_, i) => i + 1).map((w) => (
+                <option key={w} value={w}>{periodWeekLabel(sel.y, sel.m, w)}</option>
+              ))}
+            </Select>
+          </label>
+          {sel && <Button size="sm" variant="ghost" onClick={() => { setMonth('all'); setWeek('all'); }}>Тазалау</Button>}
+        </div>
+      )}
       {loading ? (
         <LoadingBlock rows={4} />
       ) : error ? (
@@ -115,22 +153,23 @@ export function SubmissionList({
                 className="card group flex flex-col p-4 text-left transition-shadow hover:shadow-lift sm:p-5"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 font-bold text-navy-900">{t.title}</p>
+                  <p className="min-w-0 font-bold text-ink">{t.title}</p>
                   <Badge tone={SUBMISSION_STATUS[s.status].tone}>{SUBMISSION_STATUS[s.status].label}</Badge>
                 </div>
                 {mode === 'curator' && names && (
-                  <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-navy-700">
+                  <p className="mt-1 flex items-center gap-2 text-xs font-semibold text-brand-700">
                     <Avatar name={names.get(s.student_id) ?? '?'} size={20} /> {names.get(s.student_id) ?? 'Оқушы'}
                   </p>
                 )}
                 {t.description && <p className="mt-2 line-clamp-2 text-sm text-muted">{t.description}</p>}
                 <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
                   <KindBadge kind={t.kind} />
+                  <Badge tone="neutral"><CalendarRange className="size-3" /> {MONTHS[t.period_month - 1]}, {t.period_week}-апта</Badge>
                   <Badge tone={overdue ? 'bad' : 'neutral'}><CalendarClock className="size-3" /> {overdue ? 'Мерзімі өтті: ' : 'Мерзімі: '}{shortDate(t.due_date)}</Badge>
                   <Badge tone={PRIORITY[t.priority].tone}>{PRIORITY[t.priority].label}</Badge>
                   <AttachmentCount n={nFiles} />
                   <ScoreBadge a={attemptOf(s)} />
-                  {s.curator_comment && <Badge tone="navy"><MessageSquare className="size-3" /> Пікір</Badge>}
+                  {s.curator_comment && <Badge tone="brand"><MessageSquare className="size-3" /> Пікір</Badge>}
                 </div>
               </button>
             );
@@ -288,8 +327,8 @@ function SubmissionModal({
             </section>
           )}
           {t.instructions && (
-            <section className="rounded-2xl bg-navy-50 p-4">
-              <h4 className="mb-1 text-xs font-bold tracking-wide text-navy-700 uppercase">Орындау нұсқаулығы</h4>
+            <section className="rounded-2xl bg-brand-50 p-4">
+              <h4 className="mb-1 text-xs font-bold tracking-wide text-brand-700 uppercase">Орындау нұсқаулығы</h4>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{t.instructions}</p>
             </section>
           )}
@@ -306,19 +345,19 @@ function SubmissionModal({
               {t.kind === 'video' && t.external_url && (
                 <section className="space-y-2">
                   {yt ? (
-                    <div className="aspect-video overflow-hidden rounded-2xl bg-navy-950">
+                    <div className="aspect-video overflow-hidden rounded-2xl bg-brand-950">
                       <iframe src={`https://www.youtube-nocookie.com/embed/${yt}`} title={t.title} className="size-full" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowFullScreen />
                     </div>
                   ) : null}
-                  <a href={t.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline">
+                  <a href={t.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
                     <ExternalLink className="size-4" /> {yt ? 'YouTube-та ашу' : 'Видеоны ашу'}
                   </a>
                 </section>
               )}
               {t.kind === 'external_link' && t.external_url && (
                 <a href={t.external_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl bg-navy-900 p-4 text-white transition hover:bg-navy-800">
-                  <ExternalLink className="size-5 shrink-0 text-sand-300" />
+                  className="flex items-center gap-3 rounded-2xl bg-brand-900 p-4 text-white transition hover:bg-brand-800">
+                  <ExternalLink className="size-5 shrink-0 text-white/75" />
                   <span className="min-w-0"><span className="block text-sm font-bold">Тапсырманы сайтта орындау</span><span className="block truncate text-xs text-white/70">{t.external_url}</span></span>
                 </a>
               )}
@@ -326,7 +365,7 @@ function SubmissionModal({
               {isTest ? (
                 attempt ? <TestResultView result={attempt} /> : (
                   <div className="rounded-2xl bg-white p-4 text-sm ring-1 ring-line">
-                    <p className="flex items-center gap-2 font-bold text-navy-900"><ListChecks className="size-4" /> Тест әлі тапсырылмаған</p>
+                    <p className="flex items-center gap-2 font-bold text-ink"><ListChecks className="size-4" /> Тест әлі тапсырылмаған</p>
                     {mode === 'student' && <p className="mt-1 text-muted">«Тестті бастау» батырмасын басқанда уақыт есептеле бастайды. Нәтиже бірден шығады.</p>}
                   </div>
                 )
@@ -400,7 +439,7 @@ function ResponseBlock({
         <h4 className="text-xs font-bold tracking-wide text-muted uppercase">{label}</h4>
         {(t.config.questions ?? []).map((q, i) => (
           <div key={i} className="rounded-2xl bg-white p-3 ring-1 ring-line">
-            <p className="mb-2 text-sm font-bold text-navy-900">{i + 1}. {q}</p>
+            <p className="mb-2 text-sm font-bold text-ink">{i + 1}. {q}</p>
             {ro ? <p className="text-sm whitespace-pre-wrap">{ans.answers[i] || <i className="text-muted">—</i>}</p> : (
               <Textarea rows={2} value={ans.answers[i]} aria-label={`${i + 1}-сұраққа жауап`} maxLength={5000}
                 onChange={(e) => setAns((s) => ({ ...s, answers: s.answers.map((x, j) => (j === i ? e.target.value : x)) }))} />
@@ -417,7 +456,7 @@ function ResponseBlock({
         <h4 className="text-xs font-bold tracking-wide text-muted uppercase">{label}</h4>
         <div className="overflow-x-auto rounded-2xl ring-1 ring-line">
           <table className="w-full min-w-[480px] border-collapse bg-white text-sm">
-            <thead><tr className="bg-navy-900 text-left text-white">
+            <thead><tr className="bg-brand-900 text-left text-white">
               <th className="w-10 px-2 py-2 text-center text-xs">№</th>
               {cols.map((c, i) => <th key={i} className="px-3 py-2 text-xs font-bold">{c}</th>)}
             </tr></thead>
@@ -430,7 +469,7 @@ function ResponseBlock({
                       {ro ? <span className="block px-3 py-2">{cell}</span> : (
                         <input value={cell} maxLength={500} aria-label={`${r + 1}-жол, ${cols[c]}`}
                           onChange={(e) => setAns((s) => ({ ...s, cells: s.cells.map((rr, i) => (i === r ? rr.map((x, j) => (j === c ? e.target.value : x)) : rr)) }))}
-                          className="w-full bg-transparent px-3 py-2 outline-none focus:bg-navy-50" />
+                          className="w-full bg-transparent px-3 py-2 outline-none focus:bg-brand-50" />
                       )}
                     </td>
                   ))}
@@ -472,7 +511,7 @@ function ResponseBlock({
     <section className="space-y-2">
       <div className="flex items-end justify-between gap-2">
         <h4 className="text-xs font-bold tracking-wide text-muted uppercase">{t.kind === 'external_link' ? 'Нәтиже / жауап' : essay ? 'Эссе мәтіні' : label}</h4>
-        {essay && <span className="text-xs font-semibold text-navy-700" data-testid="word-count">{words} сөз</span>}
+        {essay && <span className="text-xs font-semibold text-brand-700" data-testid="word-count">{words} сөз</span>}
       </div>
       {ro ? (ans.text ? <p className="rounded-2xl bg-white p-4 text-sm leading-relaxed whitespace-pre-wrap ring-1 ring-line">{ans.text}</p> : empty) : (
         <Textarea rows={essay ? 12 : 5} value={ans.text} onChange={(e) => setAns((s) => ({ ...s, text: e.target.value }))} maxLength={50000}
@@ -497,10 +536,8 @@ type CatalogTask = Task & {
 
 /** Куратордың өзі құрған тапсырмалары және әр оқушының статусы */
 export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; names: Map<string, string> }) {
-  const toast = useToast();
   const [del, setDel] = useState<CatalogTask | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const students = useMemo(() => [...names.entries()].map(([id, full_name]) => ({ id, full_name })), [names]);
   const { data, error, loading, reload } = useLoad(async () => {
     const res = await supabaseBrowser().from('tasks')
@@ -508,19 +545,7 @@ export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; na
       .eq('curator_id', curatorId).order('created_at', { ascending: false });
     return must(res) as CatalogTask[];
   }, [curatorId]);
-  useRealtime(['task_submissions', 'test_attempts'], () => reload(true));
-
-  const remove = async () => {
-    if (!del) return;
-    setBusy(true);
-    const { error } = await supabaseBrowser().from('tasks').delete().eq('id', del.id);
-    setBusy(false);
-    if (error) return toast.error(humanError(error));
-    await removeTaskFiles(del.task_attachments.map((a) => a.storage_path));
-    toast.success('Тапсырма өшірілді');
-    setDel(null);
-    reload(true);
-  };
+  useRealtime(['tasks', 'task_submissions', 'test_attempts'], () => reload(true));
 
   if (loading) return <LoadingBlock />;
   if (error) return <ErrorState text={error} onRetry={reload} />;
@@ -534,19 +559,21 @@ export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; na
         const avg = done.length ? Math.round(done.reduce((a, x) => a + (Number(x.score) * 100) / Math.max(1, Number(x.max_score)), 0) / done.length) : null;
         return (
           <Card key={t.id} className="p-4 sm:p-5" data-testid="catalog-task">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-bold text-navy-900">{t.title}</p>
-                <p className="mt-0.5 text-xs text-muted">{shortDate(t.start_date)} – {shortDate(t.due_date)} · {subs.length} оқушы · {acc} қабылданды
+                <p className="font-bold text-ink">{t.title}</p>
+                <p className="mt-0.5 text-xs text-muted">{periodShort(t)} · {shortDate(t.start_date)} – {shortDate(t.due_date)} · {subs.length} оқушы · {acc} қабылданды
                   {t.kind === 'test' && ` · ${done.length} тапсырды${avg != null ? ` · орташа ${avg}%` : ''}`}</p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <KindBadge kind={t.kind} />
-                <Badge tone={PRIORITY[t.priority].tone}>{PRIORITY[t.priority].label}</Badge>
-                <AttachmentCount n={t.task_attachments.length} />
-                <button onClick={() => setEditId(t.id)} aria-label="Өңдеу" title="Өңдеу" className="flex size-8 items-center justify-center rounded-full text-navy-900 hover:bg-navy-50"><Pencil className="size-4" /></button>
-                <button onClick={() => setDel(t)} aria-label="Өшіру" title="Өшіру" className="flex size-8 items-center justify-center rounded-full text-muted hover:bg-bad-soft hover:text-bad"><Trash2 className="size-4" /></button>
-              </div>
+              <ActionMenu label={`«${t.title}» әрекеттері`} items={[
+                { label: 'Өңдеу', icon: Pencil, onSelect: () => setEditId(t.id), testId: 'task-edit' },
+                { label: 'Тапсырманы өшіру', icon: Trash2, onSelect: () => setDel(t), danger: true, testId: 'task-delete' },
+              ]} />
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <KindBadge kind={t.kind} />
+              <Badge tone={PRIORITY[t.priority].tone}>{PRIORITY[t.priority].label}</Badge>
+              <AttachmentCount n={t.task_attachments.length} />
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {subs.map((s) => {
@@ -561,10 +588,82 @@ export function CuratorTaskCatalog({ curatorId, names }: { curatorId: string; na
           </Card>
         );
       })}
-      <ConfirmModal open={!!del} onClose={() => setDel(null)} onConfirm={remove} loading={busy} danger title="Тапсырманы өшіру"
-        text={<>«<b>{del?.title}</b>» тапсырмасы барлық оқушылардан өшіріледі.</>} confirmLabel="Өшіру" />
+      {del && <DeleteTaskModal task={del} names={names} onClose={() => setDel(null)} onDone={() => { setDel(null); reload(true); }} />}
       {editId && <TaskEditorModal students={students} editId={editId} onClose={() => setEditId(null)} onSaved={() => { setEditId(null); reload(true); }} />}
     </div>
+  );
+}
+
+/** Тапсырманы өшіру: барлық оқушыдан немесе тек бір оқушыдан (растаумен, soft delete) */
+function DeleteTaskModal({ task, names, onClose, onDone }: {
+  task: CatalogTask; names: Map<string, string>; onClose: () => void; onDone: () => void;
+}) {
+  const toast = useToast();
+  const subs = task.task_submissions;
+  const [target, setTarget] = useState<{ kind: 'all' } | { kind: 'one'; id: string; name: string } | null>(subs.length <= 1 ? { kind: 'all' } : null);
+  const [busy, setBusy] = useState(false);
+
+  const run = async () => {
+    if (!target) return;
+    setBusy(true);
+    const sb = supabaseBrowser();
+    const { error } = target.kind === 'all'
+      ? await sb.rpc('delete_task', { p_task: task.id })
+      : await sb.rpc('delete_task_assignment', { p_submission: target.id });
+    setBusy(false);
+    if (error) return toast.error(humanError(error));
+    toast.success(target.kind === 'all' ? 'Тапсырма барлық оқушыдан өшірілді' : `Тапсырма ${target.name} оқушысынан өшірілді`);
+    onDone();
+  };
+
+  return (
+    <Modal open onClose={onClose} size="sm" title="Тапсырманы өшіру" subtitle={task.title}
+      footer={target ? (
+        <>
+          <Button variant="secondary" onClick={() => (subs.length > 1 ? setTarget(null) : onClose())}>{subs.length > 1 ? 'Артқа' : 'Бас тарту'}</Button>
+          <Button onClick={run} loading={busy} data-testid="confirm-delete" data-autofocus>Иә, өшіру</Button>
+        </>
+      ) : <Button variant="secondary" onClick={onClose}>Бас тарту</Button>}>
+      {target ? (
+        <div className="space-y-3 text-sm leading-relaxed text-ink" role="alert">
+          <p>
+            {target.kind === 'all'
+              ? <>«<b>{task.title}</b>» тапсырмасы <b>барлық оқушыдан</b> ({subs.length}) өшіріледі.</>
+              : <>«<b>{task.title}</b>» тапсырмасы тек <b>{target.name}</b> оқушысынан өшіріледі. Басқа оқушыларда қала береді.</>}
+          </p>
+          <p className="rounded-2xl bg-mist px-4 py-3 text-xs text-muted">
+            Тапсырма оқушы кабинетінен бірден жоғалады. Орындалу тарихы мен нәтижелері жойылмайды — ұйымдастырушы архивтен қарай алады.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <button type="button" onClick={() => setTarget({ kind: 'all' })} data-testid="delete-all"
+            className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left ring-1 ring-line transition hover:ring-bad/40">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-bad-soft text-bad"><Trash2 className="size-5" /></span>
+            <span><span className="block text-sm font-bold text-ink">Барлық оқушыдан өшіру</span>
+              <span className="block text-xs text-muted">{subs.length} оқушының бәрінен алынады</span></span>
+          </button>
+          <div>
+            <p className="mb-2 text-xs font-bold text-ink">Тек бір оқушыдан өшіру</p>
+            <ul className="space-y-1.5">
+              {subs.map((s) => {
+                const name = names.get(s.student_id) ?? 'Оқушы';
+                return (
+                  <li key={s.id} className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-line">
+                    <Avatar name={name} size={30} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-ink">{name}</span>
+                      <span className="block text-[11px] text-muted">{SUBMISSION_STATUS[s.status].label}</span>
+                    </span>
+                    <Button size="sm" variant="danger" onClick={() => setTarget({ kind: 'one', id: s.id, name })} aria-label={`${name} оқушысынан өшіру`}>Өшіру</Button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }
 

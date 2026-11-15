@@ -25,25 +25,24 @@ export default async function Landing() {
           <Logo />
           <nav className="flex items-center gap-2">
             {cabinet ? (
-              <Link href={cabinet} className="inline-flex h-11 items-center gap-2 rounded-full bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800">
+              <Link href={cabinet} className="inline-flex h-11 items-center gap-2 rounded-full bg-brand-900 px-5 text-sm font-semibold text-white hover:bg-brand-800">
                 Кабинетке өту <ArrowRight className="size-4" />
               </Link>
             ) : (
               <>
-                <Link href="/login" className="inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold text-navy-900 hover:bg-navy-100 sm:px-5">Кіру</Link>
-                <Link href="/register" className="inline-flex h-11 items-center rounded-full bg-navy-900 px-5 text-sm font-semibold text-white hover:bg-navy-800">Тіркелу</Link>
+                <Link href="/login" className="inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold text-ink hover:bg-brand-100 sm:px-5">Кіру</Link>
+                <Link href="/register" className="inline-flex h-11 items-center rounded-full bg-brand-900 px-5 text-sm font-semibold text-white hover:bg-brand-800">Тіркелу</Link>
               </>
             )}
           </nav>
         </header>
 
         <section className="px-4 pb-6 sm:px-10">
-          <div className="relative overflow-hidden rounded-[28px] bg-navy-900 px-6 py-12 text-white sm:px-12 sm:py-16 lg:py-20">
-            <Ornament kind="koshkar" className="absolute -top-16 -right-16 size-[420px] text-mist/[0.06]" strokeWidth={1.2} /><Ornament kind="tuietaban" className="absolute -bottom-10 left-6 size-40 text-mist/[0.05]" strokeWidth={1.6} />
-            <div className="pointer-events-none absolute -bottom-40 right-48 size-80 rounded-full bg-navy-800" />
+          <div className="relative overflow-hidden rounded-[28px] bg-brand-900 px-6 py-12 text-white sm:px-12 sm:py-16 lg:py-20">
+            <Ornament kind="koshkar" className="absolute top-6 right-6 size-12 text-white/20" strokeWidth={1.3} />
             <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-mist">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">
                   <GraduationCap className="size-4" /> Жеке оқу кеңістігі
                 </span>
                 <h1 className="mt-5 text-[34px] leading-[1.08] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
@@ -54,7 +53,7 @@ export default async function Landing() {
                   жоспар, тапсырма, апталық трекер, кітап оқу есебі және сұрақ-жауап.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link href={cabinet ?? '/register'} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-[15px] font-bold text-navy-900 hover:bg-navy-100">
+                  <Link href={cabinet ?? '/register'} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-[15px] font-bold text-ink hover:bg-brand-100">
                     {cabinet ? 'Кабинетке өту' : 'Оқуды бастау'} <ArrowRight className="size-4" />
                   </Link>
                   {!cabinet && (
@@ -67,14 +66,14 @@ export default async function Landing() {
               <div className="hidden lg:block">
                 <div className="rounded-[24px] bg-cream p-5 text-ink shadow-lift">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-navy-900">Апталық прогресс</p>
-                    <span className="rounded-full bg-navy-100 px-2.5 py-1 text-[11px] font-semibold text-navy-800">Мысал</span>
+                    <p className="text-sm font-bold text-ink">Апталық прогресс</p>
+                    <span className="rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-semibold text-ink">Мысал</span>
                   </div>
-                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-navy-100"><div className="h-full w-3/5 rounded-full bg-gradient-to-r from-navy-700 to-navy-900" /></div>
+                  <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-brand-100"><div className="h-full w-3/5 rounded-full bg-gradient-to-r from-brand-700 to-brand-900" /></div>
                   <div className="mt-5 space-y-2.5">
                     {['Тақырып: Квадрат теңдеулер', 'Тест: Қазақ тілі', 'Сабақ: Физика, 15:00'].map((t, i) => (
                       <div key={t} className="flex items-center gap-3 rounded-2xl bg-white px-3.5 py-3 text-sm">
-                        <CheckCircle2 className={i < 2 ? 'size-5 text-navy-700' : 'size-5 text-navy-200'} />
+                        <CheckCircle2 className={i < 2 ? 'size-5 text-brand-700' : 'size-5 text-brand-200'} />
                         <span className={i < 2 ? 'text-muted line-through' : 'font-semibold'}>{t}</span>
                       </div>
                     ))}
@@ -93,8 +92,8 @@ export default async function Landing() {
               { icon: ShieldCheck, title: 'Ұйымдастырушы', text: 'Кураторлар мен оқушыларды басқарады, өтініштерді қарастырады, платформаның жалпы нәтижесін бақылайды.' },
             ].map(({ icon: Icon, title, text }) => (
               <div key={title} className="rounded-[28px] bg-white p-6 shadow-soft transition-shadow hover:shadow-lift">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-navy-100 text-navy-700"><Icon className="size-6" /></span>
-                <h3 className="mt-4 text-lg font-bold text-navy-900">{title}</h3>
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700"><Icon className="size-6" /></span>
+                <h3 className="mt-4 text-lg font-bold text-ink">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
               </div>
             ))}
@@ -103,7 +102,7 @@ export default async function Landing() {
 
         <section className="px-4 pb-10 sm:px-10">
           <div className="rounded-[28px] bg-mist p-6 sm:p-10">
-            <h2 className="text-2xl font-extrabold text-navy-900 sm:text-3xl">Оқу процесінің бәрі бір жерде</h2>
+            <h2 className="text-2xl font-extrabold text-ink sm:text-3xl">Оқу процесінің бәрі бір жерде</h2>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {[
                 { icon: CalendarDays, t: 'Күнтізбелік жоспар' },
@@ -114,8 +113,8 @@ export default async function Landing() {
                 { icon: TrendingUp, t: 'Нәтиже статистикасы' },
               ].map(({ icon: Icon, t }) => (
                 <div key={t} className="flex flex-col items-start gap-3 rounded-3xl bg-cream p-4">
-                  <Icon className="size-5 text-navy-700" />
-                  <span className="text-sm font-semibold leading-tight text-navy-900">{t}</span>
+                  <Icon className="size-5 text-brand-700" />
+                  <span className="text-sm font-semibold leading-tight text-ink">{t}</span>
                 </div>
               ))}
             </div>

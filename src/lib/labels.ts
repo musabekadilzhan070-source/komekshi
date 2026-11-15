@@ -3,7 +3,7 @@ import type {
   SubmissionStatus, TrackerCategory, TrackerTaskType, TaskKind, QuestionType,
 } from './types';
 
-export type Tone = 'navy' | 'ok' | 'warn' | 'info' | 'bad' | 'neutral' | 'soft';
+export type Tone = 'brand' | 'ok' | 'warn' | 'info' | 'bad' | 'neutral' | 'soft';
 
 export const ROLE_LABEL: Record<Role, string> = {
   student: 'Оқушы',
@@ -27,7 +27,7 @@ export const REQUEST_STATUS: Record<RequestStatus, { label: string; tone: Tone }
 export const PRIORITY: Record<Priority, { label: string; tone: Tone }> = {
   low: { label: 'Төмен', tone: 'neutral' },
   medium: { label: 'Орташа', tone: 'info' },
-  high: { label: 'Жоғары', tone: 'navy' },
+  high: { label: 'Жоғары', tone: 'brand' },
 };
 
 export const PLAN_STATUS: Record<PlanStatus, { label: string; tone: Tone }> = {
@@ -39,7 +39,7 @@ export const PLAN_STATUS: Record<PlanStatus, { label: string; tone: Tone }> = {
 export const SUBMISSION_STATUS: Record<SubmissionStatus, { label: string; tone: Tone }> = {
   new: { label: 'Жаңа тапсырма', tone: 'info' },
   in_progress: { label: 'Орындалуда', tone: 'warn' },
-  pending_review: { label: 'Тексеруді күтуде', tone: 'navy' },
+  pending_review: { label: 'Тексеруді күтуде', tone: 'brand' },
   accepted: { label: 'Қабылданды', tone: 'ok' },
   needs_revision: { label: 'Қайта орындау қажет', tone: 'bad' },
 };

@@ -66,17 +66,17 @@ export default function OrganizerStudentsPage() {
               <div className="flex items-start gap-3">
                 <Avatar name={s.full_name} size={44} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-bold text-navy-900">{s.full_name}</p>
+                  <p className="truncate font-bold text-ink">{s.full_name}</p>
                   <p className="truncate text-xs text-muted">{s.email}</p>
                 </div>
                 <Badge tone={ACCOUNT_STATUS[s.status].tone}>{ACCOUNT_STATUS[s.status].label}</Badge>
               </div>
               <div className="mt-3 rounded-2xl bg-mist/60 px-3 py-2 text-xs">
-                <span className="text-muted">Куратор: </span><b className="text-navy-900">{s.curator_name ?? 'тағайындалмаған'}</b>
+                <span className="text-muted">Куратор: </span><b className="text-ink">{s.curator_name ?? 'тағайындалмаған'}</b>
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <ProgressBar value={s.week_progress} className="flex-1" />
-                <span className="text-xs font-bold text-navy-900">{s.week_total ? `${s.week_progress}%` : '—'}</span>
+                <span className="text-xs font-bold text-ink">{s.week_total ? `${s.week_progress}%` : '—'}</span>
               </div>
               <p className="mt-2 text-[11px] text-muted">Тіркелген: {shortDate(s.created_at)} · Белсенділік: {relativeTime(s.last_active_at)}</p>
               <div className="mt-3 flex flex-wrap gap-1.5 border-t border-line pt-3">
@@ -100,7 +100,7 @@ export default function OrganizerStudentsPage() {
 function IconBtn({ label, onClick, children, danger }: { label: string; onClick: () => void; children: React.ReactNode; danger?: boolean }) {
   return (
     <button onClick={onClick} title={label} aria-label={label}
-      className={danger ? 'ml-auto flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-bad hover:bg-bad-soft' : 'flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-semibold text-navy-900 ring-1 ring-line hover:bg-navy-50'}>
+      className={danger ? 'ml-auto flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-bad hover:bg-bad-soft' : 'flex h-9 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-semibold text-ink ring-1 ring-line hover:bg-brand-50'}>
       {children}<span className="hidden sm:inline">{label}</span>
     </button>
   );

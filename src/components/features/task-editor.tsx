@@ -7,7 +7,7 @@ import {
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { must, useLoad } from '@/lib/hooks';
 import { humanError } from '@/lib/errors';
-import { addDays, todayISO } from '@/lib/date';
+import { addDays, MONTHS, periodOf, periodWeekLabel, todayISO, weeksInMonth } from '@/lib/date';
 import { PRIORITY, QUESTION_TYPE, TASK_KIND } from '@/lib/labels';
 import { removeTaskFiles } from '@/lib/files';
 import type { Priority, QuestionDraft, QuestionType, Task, TaskKind } from '@/lib/types';
@@ -33,7 +33,7 @@ function Section({ title, children, hint }: { title: string; hint?: string; chil
     <section className="space-y-3">
       <div>
         <OrnamentDivider className="mb-1.5" />
-        <h4 className="text-sm font-extrabold text-navy-900">{title}</h4>
+        <h4 className="text-sm font-extrabold text-ink">{title}</h4>
         {hint && <p className="text-xs text-muted">{hint}</p>}
       </div>
       {children}
@@ -91,6 +91,22 @@ function EditorForm({
     start: existing?.start_date ?? today, due: existing?.due_date ?? addDays(today, 7),
     priority: (existing?.priority ?? 'medium') as Priority, url: existing?.external_url ?? '',
   });
+  const [period, setPeriod] = useState(() => existing
+    ? { year: existing.period_year, month: existing.period_month, week: existing.period_week }
+    : periodOf(today));
+  const maxWeek = weeksInMonth(period.year, period.month);
+  const setP = (k: 'year' | 'month' | 'week', v: number) => {
+    setErr(null);
+    setPeriod((s) => {
+      const n = { ...s, [k]: v };
+      n.week = Math.min(n.week, weeksInMonth(n.year, n.month));
+      return n;
+    });
+  };
+  const years = useMemo(() => {
+    const y = new Date().getFullYear();
+    return Array.from(new Set([y - 1, y, y + 1, period.year])).sort();
+  }, [period.year]);
   const [questions, setQuestions] = useState<string[]>(existing?.config?.questions ?? ['']);
   const [columns, setColumns] = useState<string[]>(existing?.config?.columns ?? ['', '']);
   const [rows, setRows] = useState<number>(existing?.config?.rows ?? 5);
@@ -142,6 +158,7 @@ function EditorForm({
     const task = {
       title: f.title, description: f.description, instructions: f.instructions, start_date: f.start, due_date: f.due,
       priority: f.priority, kind, external_url: f.url.trim() || null, config: config(), time_limit_minutes: kind === 'test' ? minutes : null,
+      period_year: period.year, period_month: period.month, period_week: period.week,
     };
     const qPayload = kind === 'test' ? test.map(draftToPayload) : null;
     try {
@@ -190,7 +207,7 @@ function EditorForm({
         subtitle={edit ? TASK_KIND[kind].label : 'Түрін таңдап, мазмұнын толтырыңыз'}
         footer={<>
           <Button variant="secondary" onClick={cancel}>Бас тарту</Button>
-          <Button onClick={save} loading={saving} disabled={uploading} data-testid="task-save"><Send className="size-4" /> {edit ? 'Сақтау' : 'Тапсырма беру'}</Button>
+          <Button onClick={save} loading={saving} disabled={uploading} data-testid="task-save"><Send className="size-4" /> {edit ? 'Сақтау' : kind === 'test' ? 'Сақтау және оқушыға жіберу' : 'Тапсырма беру'}</Button>
         </>}
       >
         <div className="space-y-7">
@@ -204,8 +221,8 @@ function EditorForm({
                     <button key={k} type="button" role="radio" aria-checked={on} onClick={() => { setErr(null); setKind(k); }}
                       data-testid={`kind-${k}`}
                       className={clsx('flex items-center gap-2.5 rounded-2xl p-3 text-left ring-1 transition',
-                        on ? 'bg-navy-900 text-white ring-navy-900' : 'bg-white ring-line hover:ring-navy-300')}>
-                      <span className={clsx('flex size-9 shrink-0 items-center justify-center rounded-xl', on ? 'bg-mist text-navy-900' : 'bg-navy-100 text-navy-900')}>
+                        on ? 'bg-brand-900 text-white ring-brand-900' : 'bg-white ring-line hover:ring-brand-300')}>
+                      <span className={clsx('flex size-9 shrink-0 items-center justify-center rounded-xl', on ? 'bg-mist text-ink' : 'bg-brand-100 text-ink')}>
                         <Icon className="size-4" />
                       </span>
                       <span className="min-w-0">
@@ -236,14 +253,14 @@ function EditorForm({
               <div className="space-y-2">
                 {questions.map((q, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="mt-2.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-mist">{i + 1}</span>
+                    <span className="mt-2.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-900 text-[11px] font-bold text-white">{i + 1}</span>
                     <Textarea rows={1} value={q} onChange={(e) => setQuestions((s) => s.map((x, j) => (j === i ? e.target.value : x)))} maxLength={1000} placeholder="Сұрақ" aria-label={`${i + 1}-сұрақ`} />
                     <button type="button" aria-label="Сұрақты өшіру" disabled={questions.length <= 1} onClick={() => setQuestions((s) => s.filter((_, j) => j !== i))}
                       className="mt-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bad-soft hover:text-bad disabled:opacity-30"><Trash2 className="size-4" /></button>
                   </div>
                 ))}
               </div>
-              {questions.length < 50 && <button type="button" onClick={() => setQuestions((s) => [...s, ''])} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:underline"><Plus className="size-4" /> Сұрақ қосу</button>}
+              {questions.length < 50 && <button type="button" onClick={() => setQuestions((s) => [...s, ''])} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"><Plus className="size-4" /> Сұрақ қосу</button>}
             </Section>
           )}
 
@@ -258,7 +275,7 @@ function EditorForm({
                       className="flex size-7 items-center justify-center rounded-full text-muted hover:text-bad disabled:opacity-30"><X className="size-3.5" /></button>
                   </div>
                 ))}
-                {columns.length < 12 && <button type="button" onClick={() => setColumns((s) => [...s, ''])} className="inline-flex items-center gap-1 rounded-2xl px-3 text-sm font-semibold text-navy-700 ring-1 ring-dashed ring-navy-300"><Plus className="size-4" /> Баған</button>}
+                {columns.length < 12 && <button type="button" onClick={() => setColumns((s) => [...s, ''])} className="inline-flex items-center gap-1 rounded-2xl px-3 text-sm font-semibold text-brand-700 ring-1 ring-dashed ring-brand-300"><Plus className="size-4" /> Баған</button>}
               </div>
               <Field label="Жол саны" className="max-w-[160px]"><Input type="number" min={1} max={50} value={rows} onChange={(e) => setRows(Number(e.target.value))} /></Field>
             </Section>
@@ -268,7 +285,7 @@ function EditorForm({
             <Section title="Тест" hint="Сұрақтарды бөлек редакторда құрастырасыз, нәтиже автоматты есептеледі">
               <div className="flex flex-col gap-3 rounded-3xl bg-white p-4 ring-1 ring-line sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="font-bold text-navy-900" data-testid="test-summary">{test.length ? `${test.length} сұрақ · ${testSummary.total} ұпай` : 'Сұрақтар әлі қосылмаған'}</p>
+                  <p className="font-bold text-ink" data-testid="test-summary">{test.length ? `${test.length} сұрақ · ${testSummary.total} ұпай` : 'Сұрақтар әлі қосылмаған'}</p>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {minutes && <Badge tone="info">{minutes} минут</Badge>}
                     {testSummary.byType.map(([t, n]) => <Badge key={t}>{QUESTION_TYPE[t].label}: {n}</Badge>)}
@@ -290,6 +307,28 @@ function EditorForm({
               if (m.id) setRemoved((s) => [...s, m]);
               else { removeTaskFiles([m.storage_path]); setUploaded((s) => s.filter((p) => p !== m.storage_path)); }
             }} />
+          </Section>
+
+          <Section title="Кезеңі" hint="Тапсырма қай айға және сол айдың қай аптасына тиесілі">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Field label="Ай" required>
+                <Select value={period.month} onChange={(e) => setP('month', Number(e.target.value))} data-testid="period-month">
+                  {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                </Select>
+              </Field>
+              <Field label="Апта" required>
+                <Select value={period.week} onChange={(e) => setP('week', Number(e.target.value))} data-testid="period-week">
+                  {Array.from({ length: maxWeek }, (_, i) => i + 1).map((w) => (
+                    <option key={w} value={w}>{periodWeekLabel(period.year, period.month, w)}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Жыл" className="col-span-2 sm:col-span-1">
+                <Select value={period.year} onChange={(e) => setP('year', Number(e.target.value))}>
+                  {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                </Select>
+              </Field>
+            </div>
           </Section>
 
           <Section title="Мерзімі және маңыздылығы">

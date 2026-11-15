@@ -87,3 +87,29 @@ export function monthGrid(year: number, month: number): string[] {
   const start = mondayOf(toISO(first));
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
+
+/* ---------- Тапсырма кезеңі: ай және айдың аптасы ----------
+ * 1-апта = 1–7, 2-апта = 8–14, 3-апта = 15–21, 4-апта = 22–28,
+ * 5-апта = 29–айдың соңы (тек 28 күннен ұзақ айларда). Деректер базасындағы
+ * `period_week_range` функциясымен бірдей ереже. */
+export function daysInMonth(year: number, month: number) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+export function weeksInMonth(year: number, month: number) {
+  return daysInMonth(year, month) > 28 ? 5 : 4;
+}
+export function periodWeekDays(year: number, month: number, week: number) {
+  const start = (week - 1) * 7 + 1;
+  return { start, end: Math.min(start + 6, daysInMonth(year, month)) };
+}
+export function periodWeekLabel(year: number, month: number, week: number) {
+  const { start, end } = periodWeekDays(year, month, week);
+  return `${week}-апта (${start === end ? start : `${start}–${end}`} ${MONTHS_GEN[month - 1]})`;
+}
+export function periodOf(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return { year: y, month: m, week: Math.min(5, Math.ceil(d / 7)) };
+}
+export function periodShort(p: { period_year: number; period_month: number; period_week: number }) {
+  return `${MONTHS[p.period_month - 1]} ${p.period_year}, ${p.period_week}-апта`;
+}

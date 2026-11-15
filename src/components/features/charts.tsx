@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import { parseISO, MONTHS_GEN } from '@/lib/date';
 
-export const C = { dark: '#082052', accent: '#3A5BA8', soft: '#C9AE86', grid: '#ECE3D5', muted: '#5C6680' };
+export const C = { dark: '#450C13', accent: '#9A3A47', soft: '#D9C3C6', grid: '#EDEDED', muted: '#555555' };
 
 export function weekTick(iso: string) {
   const d = parseISO(iso);
@@ -12,7 +12,7 @@ export function weekTick(iso: string) {
 }
 
 const tooltipStyle = {
-  contentStyle: { borderRadius: 16, border: '1px solid #ECE3D5', boxShadow: '0 10px 30px -12px rgba(8,32,82,.22)', fontSize: 12, fontFamily: 'inherit' },
+  contentStyle: { borderRadius: 16, border: '1px solid #E6E6E6', boxShadow: '0 10px 30px -12px rgba(0,0,0,.18)', fontSize: 12, fontFamily: 'inherit' },
   labelStyle: { fontWeight: 700, color: C.dark },
 };
 

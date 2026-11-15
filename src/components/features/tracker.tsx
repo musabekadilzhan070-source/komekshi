@@ -80,7 +80,7 @@ export function TrackerSheet({
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
-        <div className="flex flex-col gap-5 bg-navy-900 p-5 text-white sm:flex-row sm:items-center sm:p-6">
+        <div className="flex flex-col gap-5 bg-brand-900 p-5 text-white sm:flex-row sm:items-center sm:p-6">
           <ProgressRing value={percent} light size={112} label="орындалды" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -103,9 +103,9 @@ export function TrackerSheet({
           return (
             <Card key={cat} className="p-4 sm:p-5">
               <div className="mb-3 flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-2xl bg-navy-100 text-navy-700"><Icon className="size-5" /></span>
+                <span className="flex size-10 items-center justify-center rounded-2xl bg-brand-100 text-brand-700"><Icon className="size-5" /></span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-bold text-navy-900">{TRACKER_CATEGORY[cat]}</h3>
+                  <h3 className="text-sm font-bold text-ink">{TRACKER_CATEGORY[cat]}</h3>
                   <p className="text-xs text-muted">{d} / {list.length}</p>
                 </div>
               </div>
@@ -126,7 +126,7 @@ export function TrackerSheet({
                               aria-pressed={!!st.done}
                               className={clsx(
                                 'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all',
-                                st.done ? 'border-ok bg-ok text-white' : 'border-navy-300 bg-white hover:border-navy-700',
+                                st.done ? 'border-ok bg-ok text-white' : 'border-brand-300 bg-white hover:border-brand-700',
                                 readOnly && 'cursor-default',
                               )}
                             >
@@ -191,12 +191,12 @@ export function TrackerPicker({
           <button
             key={t.id}
             onClick={() => onChange(t.id)}
-            className={clsx('w-[210px] shrink-0 rounded-3xl p-3.5 text-left transition-all', active ? 'bg-navy-900 text-white shadow-lift' : 'bg-cream shadow-soft hover:shadow-lift')}
+            className={clsx('w-[210px] shrink-0 rounded-3xl p-3.5 text-left transition-all', active ? 'bg-brand-900 text-white shadow-lift' : 'bg-cream shadow-soft hover:shadow-lift')}
           >
-            <p className={clsx('text-[11px] font-semibold', active ? 'text-sand-300' : 'text-navy-700')}>{weekRange(t.week_start)}</p>
+            <p className={clsx('text-[11px] font-semibold', active ? 'text-white/75' : 'text-brand-700')}>{weekRange(t.week_start)}</p>
             <p className="mt-0.5 truncate text-sm font-bold">{t.title}</p>
             <div className="mt-2 flex items-center gap-2">
-              <ProgressBar value={s.pct} tone={active ? 'light' : 'navy'} className="flex-1" />
+              <ProgressBar value={s.pct} tone={active ? 'light' : 'brand'} className="flex-1" />
               <span className="text-xs font-bold">{s.pct ?? 0}%</span>
             </div>
           </button>
@@ -275,7 +275,7 @@ export function TrackerBuilderModal({
           return (
             <section key={cat} className="rounded-3xl bg-white p-3 ring-1 ring-line sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h4 className="flex items-center gap-2 text-sm font-bold text-navy-900"><Icon className="size-4 text-navy-700" /> {TRACKER_CATEGORY[cat]} <span className="text-muted">({list.length})</span></h4>
+                <h4 className="flex items-center gap-2 text-sm font-bold text-ink"><Icon className="size-4 text-brand-700" /> {TRACKER_CATEGORY[cat]} <span className="text-muted">({list.length})</span></h4>
                 <Button size="sm" variant="soft" onClick={() => setItems((l) => [...l, blank(cat, week)])}><Plus className="size-3.5" /> Қосу</Button>
               </div>
               <div className="space-y-2">
@@ -371,8 +371,8 @@ export function CuratorTrackerDetail({
     <Card className="p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <Badge tone="navy">{weekRange(tracker.week_start)}</Badge>
-          <h2 className="mt-2 text-xl font-extrabold text-navy-900">{tracker.title}</h2>
+          <Badge tone="brand">{weekRange(tracker.week_start)}</Badge>
+          <h2 className="mt-2 text-xl font-extrabold text-ink">{tracker.title}</h2>
           <p className="mt-0.5 text-sm text-muted">
             {items.filter((i) => i.category === 'topic').length} тақырып · {items.filter((i) => i.category === 'task').length} тапсырма · {items.filter((i) => i.category === 'lesson').length} сабақ
           </p>
@@ -384,7 +384,7 @@ export function CuratorTrackerDetail({
         </div>
       </div>
 
-      <h3 className="mt-6 mb-3 text-sm font-bold text-navy-900">Оқушылардың толтыру барысы <span className="ml-1 inline-flex items-center gap-1 text-[11px] font-semibold text-ok"><span className="size-1.5 animate-pulse rounded-full bg-ok" /> тікелей</span></h3>
+      <h3 className="mt-6 mb-3 text-sm font-bold text-ink">Оқушылардың толтыру барысы <span className="ml-1 inline-flex items-center gap-1 text-[11px] font-semibold text-ok"><span className="size-1.5 animate-pulse rounded-full bg-ok" /> тікелей</span></h3>
       {loading ? <LoadingBlock rows={2} /> : error ? <ErrorState text={error} onRetry={reload} /> : assignedIds.length === 0 ? (
         <EmptyState icon={ListChecks} title="Трекер әлі ешкімге тағайындалмаған" action={<Button size="sm" variant="soft" onClick={() => setAssignOpen(true)}>Оқушы таңдау</Button>} />
       ) : (
@@ -398,12 +398,12 @@ export function CuratorTrackerDetail({
               <div key={student_id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-line">
                 <Avatar name={names.get(student_id) ?? '?'} size={36} />
                 <div className="min-w-[140px] flex-1">
-                  <p className="truncate text-sm font-bold text-navy-900">{names.get(student_id) ?? 'Оқушы'}</p>
+                  <p className="truncate text-sm font-bold text-ink">{names.get(student_id) ?? 'Оқушы'}</p>
                   <p className="text-[11px] text-muted">{last ? `Соңғы белгі: ${shortDate(last)}` : 'Әлі толтырылмаған'}</p>
                 </div>
                 <div className="flex w-full items-center gap-3 sm:w-64">
                   <ProgressBar value={value} className="flex-1" />
-                  <span className="w-20 text-right text-xs font-bold text-navy-900">{done}/{items.length} · {value ?? 0}%</span>
+                  <span className="w-20 text-right text-xs font-bold text-ink">{done}/{items.length} · {value ?? 0}%</span>
                 </div>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" onClick={() => setView(student_id)}>Толығырақ</Button>

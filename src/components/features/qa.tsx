@@ -15,7 +15,6 @@ import { ConfirmModal, Modal } from '@/components/ui/modal';
 import { Field, Input, Textarea } from '@/components/ui/form';
 import { useToast } from '@/components/ui/toast';
 import { StudentMultiSelect } from './students';
-import { Ornament } from '@/components/ui/ornament';
 
 const BUCKET = 'qa-videos';
 const ALLOWED = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/ogg'];
@@ -105,14 +104,14 @@ export function VideoPlayer({
         </div>
       )}
       {!playing && !failed && (
-        <button onClick={toggle} aria-label="Ойнату" className="absolute inset-0 m-auto flex size-16 items-center justify-center rounded-full bg-white/90 text-navy-900 shadow-lift transition-transform hover:scale-105 sm:size-20">
+        <button onClick={toggle} aria-label="Ойнату" className="absolute inset-0 m-auto flex size-16 items-center justify-center rounded-full bg-white/90 text-ink shadow-lift transition-transform hover:scale-105 sm:size-20">
           {buffering && time === 0 ? <Spinner className="size-7" /> : <Play className="ml-1 size-8 fill-current" />}
         </button>
       )}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pt-10 pb-3 text-white sm:px-4">
         <input
           type="range" min={0} max={duration || 0} step={0.1} value={time} onChange={seek} aria-label="Прогресс жолағы"
-          className="h-1.5 w-full cursor-pointer accent-[#082052]"
+          className="h-1.5 w-full cursor-pointer accent-[#450C13]"
         />
         <div className="mt-2 flex items-center gap-2 sm:gap-3">
           <button onClick={toggle} aria-label={playing ? 'Кідірту' : 'Ойнату'} className="flex size-9 items-center justify-center rounded-full hover:bg-white/15">
@@ -127,7 +126,7 @@ export function VideoPlayer({
           <input
             type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume} aria-label="Дыбыс деңгейі"
             onChange={(e) => { const v = video.current; if (v) { v.volume = Number(e.target.value); v.muted = Number(e.target.value) === 0; } }}
-            className="hidden w-24 accent-[#082052] sm:block"
+            className="hidden w-24 accent-[#450C13] sm:block"
           />
           <span className="ml-1 text-xs font-semibold tabular-nums">{durationLabel(time)} / {durationLabel(duration)}</span>
           <button onClick={toggleFs} aria-label={fs ? 'Толық экраннан шығу' : 'Толық экран'} className="ml-auto flex size-9 items-center justify-center rounded-full hover:bg-white/15">
@@ -177,18 +176,17 @@ export function StudentQa({ studentId, curatorName, focusId }: { studentId: stri
           const isNew = mondayOf(v.week_start) === current;
           return (
             <Card key={v.id} className="flex flex-col overflow-hidden transition-shadow hover:shadow-lift">
-              <div className="relative flex aspect-[16/8] items-end bg-navy-900 p-4 text-white">
-                <Ornament kind="kuskanaty" className="absolute -top-6 -right-6 size-36 text-mist/[0.09]" strokeWidth={2} />
+              <div className="relative flex aspect-[16/8] items-end bg-brand-900 p-4 text-white">
                 <div className="relative flex w-full items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold tracking-wide text-sand-300 uppercase">Апталық сұрақ-жауап</p>
+                    <p className="text-[11px] font-semibold tracking-wide text-white/75 uppercase">Апталық сұрақ-жауап</p>
                     <p className="truncate text-lg font-extrabold">{v.week_label}</p>
                   </div>
                   {p?.completed_at ? <Badge tone="soft"><CheckCircle2 className="size-3" /> Қаралды</Badge> : isNew ? <Badge tone="soft">Жаңа</Badge> : null}
                 </div>
               </div>
               <div className="flex flex-1 flex-col p-4">
-                <p className="font-bold text-navy-900">{v.title}</p>
+                <p className="font-bold text-ink">{v.title}</p>
                 <p className="mt-1 text-xs text-muted">{weekRange(v.week_start)}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {curatorName && <Badge><Users className="size-3" /> {curatorName}</Badge>}
@@ -271,8 +269,8 @@ function PlayerModal({ video, studentId, participation, onClose }: { video: QaVi
             onEnded={async () => { await flush(true); setFinished(true); }}
           />
           {finished && (
-            <div className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-navy-900/95 p-6 text-center text-white">
-              <CheckCircle2 className="mb-3 size-14 text-sand-300" />
+            <div className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-brand-900/95 p-6 text-center text-white">
+              <CheckCircle2 className="mb-3 size-14 text-white/75" />
               <p className="text-2xl font-extrabold">Сұрақ-жауап аяқталды</p>
               <p className="mt-2 text-sm text-white/70">Қатысуыңыз сақталды және кураторға көрінеді.</p>
               <div className="mt-5 flex gap-2">
@@ -373,24 +371,24 @@ export function UploadVideoModal({
       footer={<><Button variant="secondary" onClick={onClose} disabled={uploading}>Бас тарту</Button><Button onClick={save} loading={uploading}><Upload className="size-4" /> Жүктеу</Button></>}
     >
       <div className="space-y-4">
-        <label className={clsx('flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-8 text-center transition-colors', file ? 'border-navy-700 bg-navy-50' : 'border-navy-200 bg-white hover:border-navy-300')}>
+        <label className={clsx('flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-8 text-center transition-colors', file ? 'border-brand-700 bg-brand-50' : 'border-brand-200 bg-white hover:border-brand-300')}>
           <input type="file" accept={ALLOWED.join(',')} className="sr-only" disabled={uploading} onChange={(e) => pick(e.target.files?.[0] ?? null)} />
-          <Video className="mb-2 size-8 text-navy-700" />
+          <Video className="mb-2 size-8 text-brand-700" />
           {file ? (
             <>
-              <p className="max-w-full truncate text-sm font-bold text-navy-900">{file.name}</p>
+              <p className="max-w-full truncate text-sm font-bold text-ink">{file.name}</p>
               <p className="text-xs text-muted">{(file.size / 1024 / 1024).toFixed(1)} МБ · {durationLabel(duration)}</p>
             </>
           ) : (
             <>
-              <p className="text-sm font-bold text-navy-900">Видео файлын таңдаңыз</p>
+              <p className="text-sm font-bold text-ink">Видео файлын таңдаңыз</p>
               <p className="text-xs text-muted">Басып, құрылғыдан таңдаңыз</p>
             </>
           )}
         </label>
         {uploading && (
           <div>
-            <div className="mb-1 flex justify-between text-xs font-semibold text-navy-900"><span>Жүктелуде…</span><span>{progress}%</span></div>
+            <div className="mb-1 flex justify-between text-xs font-semibold text-ink"><span>Жүктелуде…</span><span>{progress}%</span></div>
             <ProgressBar value={progress} />
           </div>
         )}
@@ -470,16 +468,16 @@ export function CuratorVideoList({ curatorId, students, names, maxMb }: { curato
             return (
               <Card key={v.id} className="p-4 sm:p-5">
                 <div className="flex items-start gap-3">
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-navy-900 text-white"><PlayCircle className="size-6" /></span>
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-900 text-white"><PlayCircle className="size-6" /></span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold text-navy-700">{v.week_label} · {weekRange(v.week_start)}</p>
-                    <p className="truncate font-bold text-navy-900">{v.title}</p>
+                    <p className="text-[11px] font-semibold text-brand-700">{v.week_label} · {weekRange(v.week_start)}</p>
+                    <p className="truncate font-bold text-ink">{v.title}</p>
                     <p className="text-xs text-muted">{durationLabel(v.duration_seconds)} · {(v.size_bytes / 1024 / 1024).toFixed(1)} МБ</p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-navy-900">{assigned}</p><p className="text-[10px] text-muted">тағайындалды</p></div>
-                  <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-navy-900">{started}</p><p className="text-[10px] text-muted">бастады</p></div>
+                  <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-ink">{assigned}</p><p className="text-[10px] text-muted">тағайындалды</p></div>
+                  <div className="rounded-2xl bg-mist/60 py-2"><p className="text-lg font-extrabold text-ink">{started}</p><p className="text-[10px] text-muted">бастады</p></div>
                   <div className="rounded-2xl bg-ok-soft py-2"><p className="text-lg font-extrabold text-ok">{completed}</p><p className="text-[10px] text-muted">аяқтады</p></div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -502,7 +500,7 @@ export function CuratorVideoList({ curatorId, students, names, maxMb }: { curato
                 <div key={student_id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-line">
                   <Avatar name={names.get(student_id) ?? '?'} size={34} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-navy-900">{names.get(student_id) ?? 'Оқушы'}</p>
+                    <p className="truncate text-sm font-bold text-ink">{names.get(student_id) ?? 'Оқушы'}</p>
                     <p className="text-[11px] text-muted">
                       {p ? <>Бастады: {dateTime(p.started_at)}{p.completed_at && <> · Аяқтады: {dateTime(p.completed_at)}</>}</> : 'Әлі ашқан жоқ'}
                     </p>
@@ -548,9 +546,9 @@ export function StudentQaParticipation({ studentId }: { studentId: string }) {
         const p = data!.part.find((x) => x.video_id === v.id);
         return (
           <div key={v.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-line">
-            <PlayCircle className="size-5 text-navy-700" />
+            <PlayCircle className="size-5 text-brand-700" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-navy-900">{v.title}</p>
+              <p className="truncate text-sm font-bold text-ink">{v.title}</p>
               <p className="text-[11px] text-muted">{v.week_label} · {p ? `Қарады: ${durationLabel(p.watched_seconds)} / ${durationLabel(v.duration_seconds)}` : 'Ашылмаған'}</p>
             </div>
             <Badge tone={p?.completed_at ? 'ok' : p ? 'warn' : 'neutral'}>{p?.completed_at ? 'Қатысты' : p ? 'Басталды' : 'Қатыспады'}</Badge>
