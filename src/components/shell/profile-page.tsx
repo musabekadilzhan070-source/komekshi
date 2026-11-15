@@ -69,10 +69,10 @@ export function ProfilePage() {
       <Card className="mb-4 flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
         <Avatar name={account.full_name} size={64} />
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-bold text-berry-900">{account.full_name}</p>
+          <p className="text-lg font-bold text-navy-900">{account.full_name}</p>
           <p className="truncate text-sm text-muted">{account.email}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Badge tone="berry">{ROLE_LABEL[account.role]}</Badge>
+            <Badge tone="navy">{ROLE_LABEL[account.role]}</Badge>
             <Badge tone="ok">Белсенді</Badge>
             <Badge>Тіркелген: {shortDate(account.created_at)}</Badge>
           </div>
@@ -81,7 +81,7 @@ export function ProfilePage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5 sm:p-6">
           <form onSubmit={save} className="space-y-4">
-            <h2 className="font-bold text-berry-900">Жеке деректер</h2>
+            <h2 className="font-bold text-navy-900">Жеке деректер</h2>
             <Field label="Аты-жөні" required><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} /></Field>
             <Field label="Байланыс ақпараты" hint="Телефон, Telegram т.б."><Input value={contact} onChange={(e) => setContact(e.target.value)} maxLength={300} /></Field>
             {account.role === 'curator' && (
@@ -98,7 +98,7 @@ export function ProfilePage() {
         </Card>
         <Card className="p-5 sm:p-6">
           <form onSubmit={changePassword} className="space-y-4">
-            <h2 className="font-bold text-berry-900">Құпиясөзді өзгерту</h2>
+            <h2 className="font-bold text-navy-900">Құпиясөзді өзгерту</h2>
             <Field label="Жаңа құпиясөз" hint="Кемінде 8 таңба"><Input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
             <Field label="Құпиясөзді қайталаңыз"><Input type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
             <Button type="submit" variant="secondary" loading={pwSaving}><KeyRound className="size-4" /> Жаңарту</Button>

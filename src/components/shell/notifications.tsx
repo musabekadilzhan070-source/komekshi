@@ -89,19 +89,19 @@ export function NotificationRow({ n, compact, onOpen }: { n: Notification; compa
       }}
       className={clsx(
         'group flex w-full items-start gap-3 rounded-2xl text-left transition-colors',
-        compact ? 'p-2.5 hover:bg-white' : 'p-3.5 hover:bg-berry-50',
-        !n.read_at && !compact && 'bg-berry-50/70',
+        compact ? 'p-2.5 hover:bg-white' : 'p-3.5 hover:bg-navy-50',
+        !n.read_at && !compact && 'bg-navy-50/70',
       )}
     >
-      <span className={clsx('flex size-9 shrink-0 items-center justify-center rounded-xl', n.read_at ? 'bg-mist text-muted' : 'bg-berry-900 text-white')}>
+      <span className={clsx('flex size-9 shrink-0 items-center justify-center rounded-xl', n.read_at ? 'bg-mist text-muted' : 'bg-navy-900 text-white')}>
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className={clsx('block text-[13px] leading-snug', n.read_at ? 'font-medium text-ink/80' : 'font-bold text-berry-900')}>{n.title}</span>
+        <span className={clsx('block text-[13px] leading-snug', n.read_at ? 'font-medium text-ink/80' : 'font-bold text-navy-900')}>{n.title}</span>
         {n.body && <span className={clsx('mt-0.5 block text-xs text-muted', compact && 'line-clamp-2')}>{n.body}</span>}
         <span className="mt-1 block text-[11px] text-muted/80">{relativeTime(n.created_at)}</span>
       </span>
-      {!n.read_at && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-berry-700" aria-label="Оқылмаған" />}
+      {!n.read_at && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-navy-700" aria-label="Оқылмаған" />}
     </button>
   );
 }
@@ -114,12 +114,12 @@ export function BellButton({ href, light }: { href: string; light?: boolean }) {
       aria-label={`Хабарламалар${unread ? `, ${unread} оқылмаған` : ''}`}
       className={clsx(
         'relative flex size-10 items-center justify-center rounded-full transition-colors',
-        light ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-berry-900 ring-1 ring-line hover:bg-berry-50',
+        light ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-navy-900 ring-1 ring-line hover:bg-navy-50',
       )}
     >
       <Bell className="size-[18px]" />
       {unread > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-berry-700 px-1 text-[10px] font-bold text-white ring-2 ring-cream">
+        <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-navy-700 px-1 text-[10px] font-bold text-white ring-2 ring-cream">
           {unread > 99 ? '99+' : unread}
         </span>
       )}

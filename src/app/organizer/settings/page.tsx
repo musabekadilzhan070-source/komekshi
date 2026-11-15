@@ -46,23 +46,23 @@ export default function OrganizerSettingsPage() {
       {loading || !f ? <LoadingBlock /> : error ? <ErrorState text={error} onRetry={reload} /> : (
         <div className="space-y-4">
           <Card className="space-y-4 p-5 sm:p-6">
-            <h2 className="font-bold text-berry-900">Жалпы</h2>
+            <h2 className="font-bold text-navy-900">Жалпы</h2>
             <Field label="Платформа атауы"><Input value={f.platform_name} onChange={(e) => setF({ ...f, platform_name: e.target.value })} maxLength={80} /></Field>
             <Field label="Хабарландыру мәтіні" hint="Ішкі ақпарат ретінде сақталады"><Textarea rows={3} value={f.welcome_message ?? ''} onChange={(e) => setF({ ...f, welcome_message: e.target.value })} maxLength={1000} /></Field>
           </Card>
           <Card className="space-y-2 p-5 sm:p-6">
-            <h2 className="mb-2 font-bold text-berry-900">Тіркелу</h2>
+            <h2 className="mb-2 font-bold text-navy-900">Тіркелу</h2>
             <Checkbox checked={f.student_registration_open} onChange={(v) => setF({ ...f, student_registration_open: v })} label={<><b>Оқушылардың тіркелуі ашық</b><span className="block text-xs text-muted">Өшірілсе, жаңа оқушылар өтініш жібере алмайды</span></>} />
             <Checkbox checked={f.curator_registration_open} onChange={(v) => setF({ ...f, curator_registration_open: v })} label={<><b>Кураторлардың тіркелуі ашық</b><span className="block text-xs text-muted">Өшірілсе, жаңа кураторлар өтініш жібере алмайды</span></>} />
           </Card>
           <Card className="space-y-4 p-5 sm:p-6">
-            <h2 className="font-bold text-berry-900">Видео жүктеу шектеуі</h2>
+            <h2 className="font-bold text-navy-900">Видео жүктеу шектеуі</h2>
             <Field label="Бір видеоның ең үлкен көлемі, МБ" hint="10–500 МБ. Рұқсат етілген форматтар: MP4, WebM, MOV, M4V, OGG">
               <Input type="number" min={10} max={500} value={f.max_video_mb} onChange={(e) => setF({ ...f, max_video_mb: Number(e.target.value) })} />
             </Field>
           </Card>
           <Card className="flex gap-3 p-5 text-sm sm:p-6">
-            <ShieldCheck className="size-5 shrink-0 text-berry-700" />
+            <ShieldCheck className="size-5 shrink-0 text-navy-700" />
             <p className="text-muted">Жаңа организатор аккаунтын тек сервер деңгейіндегі бастапқы баптау скрипті арқылы қосуға болады (<code className="rounded bg-mist px-1">npm run create-organizer</code>). Қарапайым тіркелу арқылы организатор болу мүмкін емес.</p>
           </Card>
           <div className="flex justify-end"><Button onClick={save} loading={saving}><Save className="size-4" /> Сақтау</Button></div>

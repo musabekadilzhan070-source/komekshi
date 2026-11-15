@@ -87,12 +87,12 @@ export default function RegisterPage() {
     return (
       <AuthFrame aside={<AuthAside title="Өтініш жіберілді" text="Поштаңызды растағаннан кейін өтінішіңіздің күйін бақылай аласыз." />}>
         <div className="text-center">
-          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-berry-100 text-berry-700"><MailCheck className="size-8" /></div>
-          <h1 className="text-2xl font-extrabold text-berry-900">Поштаңызды тексеріңіз</h1>
+          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-navy-100 text-navy-700"><MailCheck className="size-8" /></div>
+          <h1 className="text-2xl font-extrabold text-navy-900">Поштаңызды тексеріңіз</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             <b className="text-ink">{email}</b> мекенжайына растау хаты жіберілді. Сілтемені басқаннан кейін өтінішіңіздің күйін көре аласыз.
           </p>
-          <Link href="/login" className="mt-6 inline-block font-bold text-berry-700 hover:underline">Кіру бетіне өту</Link>
+          <Link href="/login" className="mt-6 inline-block font-bold text-navy-700 hover:underline">Кіру бетіне өту</Link>
         </div>
       </AuthFrame>
     );
@@ -105,13 +105,13 @@ export default function RegisterPage() {
     <AuthFrame aside={<AuthAside title="Жеке оқу жолыңызды бастаңыз" text="Куратор сізбен жеке жұмыс жүргізеді: жоспар құрады, тапсырма береді және нәтижеңізді бірге бақылайды." />}>
       <div className="mb-6 flex items-center gap-2" aria-label={`Қадам ${step} / ${totalSteps}`}>
         {Array.from({ length: totalSteps }).map((_, i) => (
-          <span key={i} className={clsx('h-1.5 flex-1 rounded-full transition-colors', i < step ? 'bg-berry-700' : 'bg-berry-100')} />
+          <span key={i} className={clsx('h-1.5 flex-1 rounded-full transition-colors', i < step ? 'bg-navy-700' : 'bg-navy-100')} />
         ))}
       </div>
 
       {step === 1 && (
         <>
-          <h1 className="text-3xl font-extrabold tracking-tight text-berry-900">Тіркелу</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">Тіркелу</h1>
           <p className="mt-2 text-sm text-muted">Платформаға кім ретінде қосыласыз?</p>
           <div className="mt-6 grid gap-3">
             {([
@@ -124,18 +124,18 @@ export default function RegisterPage() {
                 onClick={() => setRole(r)}
                 className={clsx(
                   'flex items-start gap-4 rounded-3xl border-2 p-4 text-left transition-all',
-                  role === r ? 'border-berry-700 bg-berry-50' : 'border-line bg-white hover:border-berry-300',
+                  role === r ? 'border-navy-700 bg-navy-50' : 'border-line bg-white hover:border-navy-300',
                   roleClosed(r) && 'opacity-50',
                 )}
               >
-                <span className={clsx('flex size-12 shrink-0 items-center justify-center rounded-2xl', role === r ? 'bg-berry-700 text-white' : 'bg-berry-100 text-berry-700')}>
+                <span className={clsx('flex size-12 shrink-0 items-center justify-center rounded-2xl', role === r ? 'bg-navy-700 text-white' : 'bg-navy-100 text-navy-700')}>
                   <Icon className="size-6" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-bold text-berry-900">{title}</span>
+                  <span className="block font-bold text-navy-900">{title}</span>
                   <span className="mt-0.5 block text-sm text-muted">{roleClosed(r) ? 'Тіркелу уақытша жабық' : text}</span>
                 </span>
-                {role === r && <Check className="size-5 text-berry-700" />}
+                {role === r && <Check className="size-5 text-navy-700" />}
               </button>
             ))}
           </div>
@@ -157,7 +157,7 @@ export default function RegisterPage() {
           noValidate
         >
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-berry-900">{role === 'student' ? 'Оқушы аккаунты' : 'Куратор аккаунты'}</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">{role === 'student' ? 'Оқушы аккаунты' : 'Куратор аккаунты'}</h1>
             <p className="mt-1 text-sm text-muted">Деректеріңізді енгізіңіз.</p>
           </div>
           <Field label="Аты-жөні" required error={errors.name}>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
       )}
 
       <p className="mt-6 text-center text-sm text-muted">
-        Аккаунтыңыз бар ма? <Link href="/login" className="font-bold text-berry-700 hover:underline">Кіру</Link>
+        Аккаунтыңыз бар ма? <Link href="/login" className="font-bold text-navy-700 hover:underline">Кіру</Link>
       </p>
     </AuthFrame>
   );
@@ -223,7 +223,7 @@ function CuratorStep({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-berry-900">Куратор таңдау</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Куратор таңдау</h1>
         <p className="mt-1 text-sm text-muted">Өтінішіңіз таңдалған куратордың кабинетіне түседі.</p>
       </div>
       <CuratorPicker selected={selected} onSelect={onSelect} />

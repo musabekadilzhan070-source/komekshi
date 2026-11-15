@@ -5,6 +5,8 @@ import { X } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from './button';
 
+const STACK: symbol[] = [];
+
 export function Modal({
   open, onClose, title, subtitle, children, footer, size = 'md',
 }: {
@@ -17,12 +19,16 @@ export function Modal({
   closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
+    // Бір модаль ішінде екіншісі ашылса, Escape тек ең үстіңгісін жабады
+    const id = Symbol('modal');
+    STACK.push(id);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && STACK[STACK.length - 1] === id && closeRef.current();
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     setTimeout(() => panel.current?.querySelector<HTMLElement>('input,textarea,select,button[data-autofocus]')?.focus(), 30);
     return () => {
+      STACK.splice(STACK.indexOf(id), 1);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
     };
@@ -31,7 +37,7 @@ export function Modal({
   if (!open || typeof document === 'undefined') return null;
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="absolute inset-0 bg-berry-950/45 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/45 backdrop-blur-[2px]" onClick={onClose} />
       <div
         ref={panel}
         className={clsx(
@@ -41,10 +47,10 @@ export function Modal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 pt-5 pb-4 sm:px-7">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold text-berry-900">{title}</h3>
+            <h3 className="text-lg font-bold text-navy-900">{title}</h3>
             {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
           </div>
-          <button onClick={onClose} aria-label="Жабу" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-berry-900 ring-1 ring-line hover:bg-berry-50">
+          <button onClick={onClose} aria-label="Жабу" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-navy-900 ring-1 ring-line hover:bg-navy-50">
             <X className="size-4" />
           </button>
         </div>

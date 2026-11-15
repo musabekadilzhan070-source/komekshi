@@ -55,7 +55,7 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
     <div className="grid gap-4 2xl:grid-cols-[1fr_360px]">
       <Card className="p-3 sm:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 px-1">
-          <h2 className="text-lg font-extrabold text-berry-900 sm:text-xl">{MONTHS[cursor.m]} {cursor.y}</h2>
+          <h2 className="text-lg font-extrabold text-navy-900 sm:text-xl">{MONTHS[cursor.m]} {cursor.y}</h2>
           <div className="flex items-center gap-1.5">
             <Button variant="secondary" size="sm" onClick={goToday}>Бүгін</Button>
             <Button variant="secondary" size="icon" className="!size-9" onClick={() => move(-1)} aria-label="Алдыңғы ай"><ChevronLeft className="size-4" /></Button>
@@ -65,7 +65,7 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
 
         <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {WEEKDAYS_SHORT.map((d, i) => (
-            <div key={d} className={clsx('pb-1 text-center text-[11px] font-bold uppercase', i >= 5 ? 'text-berry-500' : 'text-muted')}>{d}</div>
+            <div key={d} className={clsx('pb-1 text-center text-[11px] font-bold uppercase', i >= 5 ? 'text-navy-500' : 'text-muted')}>{d}</div>
           ))}
           {grid.map((iso) => {
             const d = parseISO(iso);
@@ -82,18 +82,18 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
                 aria-pressed={isSel}
                 className={clsx(
                   'group relative flex min-h-[52px] flex-col rounded-xl p-1 text-left transition-all sm:min-h-[96px] sm:rounded-2xl sm:p-1.5',
-                  isSel ? 'bg-berry-50 ring-2 ring-berry-700' : 'bg-white hover:ring-1 hover:ring-berry-300',
+                  isSel ? 'bg-navy-50 ring-2 ring-navy-700' : 'bg-white hover:ring-1 hover:ring-navy-300',
                   !inMonth && 'opacity-45',
                 )}
               >
                 <span className={clsx(
                   'flex size-6 items-center justify-center self-center rounded-full text-xs font-bold sm:size-7 sm:self-start',
-                  isToday ? 'bg-berry-900 text-white' : 'text-berry-900',
+                  isToday ? 'bg-navy-900 text-white' : 'text-navy-900',
                 )}>{d.getDate()}</span>
                 {/* Мобильді: нүктелер */}
                 <span className="mt-auto flex justify-center gap-0.5 pb-0.5 sm:hidden">
                   {items.slice(0, 3).map((p) => (
-                    <span key={p.id} className={clsx('size-1.5 rounded-full', p.creator_role === 'curator' ? 'bg-berry-900' : 'bg-berry-300', p.status === 'done' && 'opacity-40')} />
+                    <span key={p.id} className={clsx('size-1.5 rounded-full', p.creator_role === 'curator' ? 'bg-navy-900' : 'bg-navy-300', p.status === 'done' && 'opacity-40')} />
                   ))}
                 </span>
                 {/* Үлкен экран: атаулар */}
@@ -103,7 +103,7 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
                       key={p.id}
                       className={clsx(
                         'truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold',
-                        p.creator_role === 'curator' ? 'bg-berry-900 text-white' : 'bg-berry-200 text-berry-950',
+                        p.creator_role === 'curator' ? 'bg-navy-900 text-white' : 'bg-navy-200 text-navy-950',
                         p.status === 'done' && 'line-through opacity-50',
                       )}
                      title={p.title}>{p.title}</span>
@@ -115,8 +115,8 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
           })}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-4 px-1 text-xs text-muted">
-          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-berry-300" /> Оқушы жасаған</span>
-          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-berry-900" /> Куратор жасаған</span>
+          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-navy-300" /> Оқушы жасаған</span>
+          <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-navy-900" /> Куратор жасаған</span>
           <span className="hidden sm:inline">Күнді екі рет басып, жылдам жоспар қосыңыз</span>
         </div>
       </Card>
@@ -125,7 +125,7 @@ export function Planner({ studentId, mode }: { studentId: string; mode: Mode }) 
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold text-muted">{selected === today ? 'Бүгін' : 'Таңдалған күн'}</p>
-            <h3 className="text-lg font-extrabold text-berry-900">{longDate(selected)}</h3>
+            <h3 className="text-lg font-extrabold text-navy-900">{longDate(selected)}</h3>
           </div>
           <Button size="sm" onClick={() => setEditing('new')}><Plus className="size-4" /> Жоспар</Button>
         </div>
@@ -176,7 +176,7 @@ function PlanRow({ plan, mode, onOpen, onChanged }: { plan: Plan; mode: Mode; on
     onChanged();
   };
   return (
-    <div className={clsx('group rounded-2xl border p-3 transition-colors', plan.creator_role === 'curator' ? 'border-berry-200 bg-berry-50/60' : 'border-line bg-white')}>
+    <div className={clsx('group rounded-2xl border p-3 transition-colors', plan.creator_role === 'curator' ? 'border-navy-200 bg-navy-50/60' : 'border-line bg-white')}>
       <div className="flex items-start gap-3">
         <button
           onClick={cycle}
@@ -187,14 +187,14 @@ function PlanRow({ plan, mode, onOpen, onChanged }: { plan: Plan; mode: Mode; on
             'mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
             plan.status === 'done' && 'border-ok bg-ok text-white',
             plan.status === 'in_progress' && 'border-warn bg-warn-soft',
-            plan.status === 'todo' && 'border-berry-300 bg-white hover:border-berry-700',
+            plan.status === 'todo' && 'border-navy-300 bg-white hover:border-navy-700',
           )}
         >
           {plan.status === 'done' && <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={3.5}><path d="m5 12 5 5 9-10" /></svg>}
           {plan.status === 'in_progress' && <span className="size-2 rounded-full bg-warn" />}
         </button>
         <button onClick={onOpen} className="min-w-0 flex-1 text-left">
-          <p className={clsx('text-sm font-bold text-berry-900', plan.status === 'done' && 'text-muted line-through')}>{plan.title}</p>
+          <p className={clsx('text-sm font-bold text-navy-900', plan.status === 'done' && 'text-muted line-through')}>{plan.title}</p>
           {plan.description && <p className="mt-0.5 line-clamp-2 text-xs text-muted">{plan.description}</p>}
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {(plan.start_time || plan.end_time) && (
@@ -202,12 +202,12 @@ function PlanRow({ plan, mode, onOpen, onChanged }: { plan: Plan; mode: Mode; on
             )}
             <Badge tone={PRIORITY[plan.priority].tone}>{PRIORITY[plan.priority].label}</Badge>
             <Badge tone={PLAN_STATUS[plan.status].tone}>{PLAN_STATUS[plan.status].label}</Badge>
-            <Badge tone={plan.creator_role === 'curator' ? 'berry' : 'neutral'}>
+            <Badge tone={plan.creator_role === 'curator' ? 'navy' : 'neutral'}>
               <UserRound className="size-3" /> {plan.creator_role === 'curator' ? 'Куратор жасаған' : 'Оқушы жасаған'}
             </Badge>
           </div>
         </button>
-        <button onClick={onOpen} aria-label="Ашу" className="hidden size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-berry-100 group-hover:flex">
+        <button onClick={onOpen} aria-label="Ашу" className="hidden size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-navy-100 group-hover:flex">
           <Pencil className="size-3.5" />
         </button>
       </div>
@@ -287,7 +287,7 @@ function PlanModal({
         }
       >
         {locked && (
-          <p className="mb-4 flex items-start gap-2 rounded-2xl bg-berry-50 px-4 py-3 text-xs text-berry-800">
+          <p className="mb-4 flex items-start gap-2 rounded-2xl bg-navy-50 px-4 py-3 text-xs text-navy-800">
             <Lock className="mt-0.5 size-3.5 shrink-0" /> Бұл жоспарды куратор құрған. Сіз тек орындалу статусын белгілей аласыз.
           </p>
         )}

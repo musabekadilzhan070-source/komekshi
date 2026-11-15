@@ -52,21 +52,21 @@ export function StudentStatsPanel({ studentId }: { studentId: string }) {
       {hasHistory ? (
         <div className="grid gap-4 xl:grid-cols-2">
           <Card className="p-4 sm:p-5">
-            <h3 className="mb-2 text-sm font-bold text-berry-900">Апталық трекер прогресі, %</h3>
+            <h3 className="mb-2 text-sm font-bold text-navy-900">Апталық трекер прогресі, %</h3>
             <AreaTrend data={h} x="week_start" y="progress" name="Прогресс" unit="%" max={100} />
           </Card>
           <Card className="p-4 sm:p-5">
-            <h3 className="mb-2 text-sm font-bold text-berry-900">Белсенділік динамикасы</h3>
+            <h3 className="mb-2 text-sm font-bold text-navy-900">Белсенділік динамикасы</h3>
             <Bars data={h} x="week_start" tickFormatter={weekTick}
               bars={[{ key: 'tasks_done', name: 'Тапсырылған тапсырмалар' }, { key: 'plans_done', name: 'Орындалған жоспарлар' }]} />
           </Card>
           <Card className="p-4 sm:p-5">
-            <h3 className="mb-2 text-sm font-bold text-berry-900">Оқылған беттер</h3>
+            <h3 className="mb-2 text-sm font-bold text-navy-900">Оқылған беттер</h3>
             <Bars data={h} x="week_start" tickFormatter={weekTick} bars={[{ key: 'pages', name: 'Беттер' }]} unit=" бет" />
           </Card>
           <Card className="p-4 sm:p-5">
-            <h3 className="mb-2 text-sm font-bold text-berry-900">Оқуға жұмсалған уақыт, мин</h3>
-            <Bars data={h} x="week_start" tickFormatter={weekTick} bars={[{ key: 'minutes', name: 'Минут', color: '#8C1C3C' }]} unit=" мин" />
+            <h3 className="mb-2 text-sm font-bold text-navy-900">Оқуға жұмсалған уақыт, мин</h3>
+            <Bars data={h} x="week_start" tickFormatter={weekTick} bars={[{ key: 'minutes', name: 'Минут', color: '#3A5BA8' }]} unit=" мин" />
           </Card>
         </div>
       ) : (

@@ -3,22 +3,26 @@
 @theme {
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
-  --color-berry-950: #2E0C18;
-  --color-berry-900: #4A1528;
-  --color-berry-800: #6B1832;
-  --color-berry-700: #8C1C3C;
-  --color-berry-500: #B9667A;
-  --color-berry-300: #D9A7B0;
-  --color-berry-200: #E9C9CF;
-  --color-berry-100: #F4E4E7;
-  --color-berry-50:  #FAF1F2;
+  --color-navy-950: #04112E;
+  --color-navy-900: #082052;
+  --color-navy-800: #102C66;
+  --color-navy-700: #1F3F80;
+  --color-navy-500: #5B6E9C;
+  --color-navy-300: #A8B4D0;
+  --color-navy-200: #CED6E7;
+  --color-navy-100: #E7EBF4;
+  --color-navy-50:  #F3F5FA;
 
-  --color-mist: #EDE6E3;
-  --color-mist-dark: #E2D8D4;
-  --color-cream: #FBF8F6;
-  --color-ink: #2A0E18;
-  --color-muted: #7A6066;
-  --color-line: #EADFDB;
+  --color-sand-500: #C9AE86;
+  --color-sand-300: #E6D5BC;
+  --color-sand-100: #F2E7D7;
+
+  --color-mist: #F8F0E5;
+  --color-mist-dark: #EFE3D2;
+  --color-cream: #FFFCF7;
+  --color-ink: #0B1733;
+  --color-muted: #5C6680;
+  --color-line: #ECE2D3;
 
   --color-ok: #2F7D5B;
   --color-ok-soft: #E3F1EA;
@@ -26,14 +30,14 @@
   --color-warn-soft: #FBF0DD;
   --color-info: #3B6E8F;
   --color-info-soft: #E3EEF5;
-  --color-bad: #B42335;
+  --color-bad: #B3261E;
   --color-bad-soft: #FBE5E8;
 
   --radius-xl2: 1.25rem;
   --radius-xl3: 1.75rem;
 
-  --shadow-soft: 0 1px 2px rgba(74, 21, 40, 0.04), 0 8px 24px -12px rgba(74, 21, 40, 0.12);
-  --shadow-lift: 0 2px 4px rgba(74, 21, 40, 0.05), 0 18px 40px -16px rgba(74, 21, 40, 0.22);
+  --shadow-soft: 0 1px 2px rgba(8, 32, 82, 0.04), 0 8px 24px -12px rgba(8, 32, 82, 0.10);
+  --shadow-lift: 0 2px 4px rgba(8, 32, 82, 0.05), 0 18px 40px -16px rgba(8, 32, 82, 0.20);
 }
 
 @layer base {
@@ -45,8 +49,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  ::selection { background: var(--color-berry-300); color: var(--color-berry-950); }
-  :focus-visible { outline: 2px solid var(--color-berry-700); outline-offset: 2px; }
+  ::selection { background: var(--color-navy-300); color: var(--color-navy-950); }
+  :focus-visible { outline: 2px solid var(--color-navy-700); outline-offset: 2px; }
   button, [role="button"] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   input, textarea, select { font: inherit; }
@@ -60,7 +64,7 @@
   .card { @apply min-w-0 rounded-xl3 bg-cream shadow-soft; }
   .field-input {
     @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink placeholder:text-muted/70
-      transition-colors duration-150 outline-none focus:border-berry-500 focus:ring-4 focus:ring-berry-100
+      transition-colors duration-150 outline-none focus:border-navy-500 focus:ring-4 focus:ring-navy-100
       disabled:bg-mist/60 disabled:text-muted;
   }
   .scrollbar-none { scrollbar-width: none; }
@@ -74,7 +78,7 @@
 .animate-fade-in { animation: fade-in 180ms ease-out both; }
 .animate-sheet-in { animation: sheet-in 220ms cubic-bezier(.2,.8,.2,1) both; }
 .skeleton {
-  background: linear-gradient(90deg, #efe7e4 0px, #f7f1ef 120px, #efe7e4 240px);
+  background: linear-gradient(90deg, #F1E7D9 0px, #FAF4EB 120px, #F1E7D9 240px);
   background-size: 800px 100%;
   animation: shimmer 1.4s linear infinite;
 }

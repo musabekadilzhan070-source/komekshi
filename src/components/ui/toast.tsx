@@ -36,14 +36,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             role={t.kind === 'error' ? 'alert' : 'status'}
             className={clsx(
               'animate-fade-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl px-4 py-3 text-sm shadow-lift',
-              t.kind === 'success' && 'bg-berry-900 text-white',
+              t.kind === 'success' && 'bg-navy-900 text-white',
               t.kind === 'error' && 'bg-white text-bad ring-1 ring-bad/20',
               t.kind === 'info' && 'bg-white text-ink ring-1 ring-line',
             )}
           >
-            {t.kind === 'success' && <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-berry-300" />}
+            {t.kind === 'success' && <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sand-300" />}
             {t.kind === 'error' && <AlertCircle className="mt-0.5 size-4 shrink-0" />}
-            {t.kind === 'info' && <Info className="mt-0.5 size-4 shrink-0 text-berry-700" />}
+            {t.kind === 'info' && <Info className="mt-0.5 size-4 shrink-0 text-navy-700" />}
             <span className="flex-1 leading-snug">{t.text}</span>
             <button onClick={() => remove(t.id)} aria-label="Жабу" className="opacity-60 hover:opacity-100">
               <X className="size-4" />

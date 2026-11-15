@@ -23,11 +23,11 @@ export default function CuratorStatsPage() {
           {hist.data && (
             <div className="grid gap-4 xl:grid-cols-2">
               <Card className="p-4 sm:p-5">
-                <h3 className="mb-2 text-sm font-bold text-berry-900">Топтың орташа апталық прогресі, %</h3>
+                <h3 className="mb-2 text-sm font-bold text-navy-900">Топтың орташа апталық прогресі, %</h3>
                 <AreaTrend data={hist.data} x="week_start" y="avg_progress" name="Орташа прогресс" unit="%" max={100} />
               </Card>
               <Card className="p-4 sm:p-5">
-                <h3 className="mb-2 text-sm font-bold text-berry-900">Белсенділік динамикасы</h3>
+                <h3 className="mb-2 text-sm font-bold text-navy-900">Белсенділік динамикасы</h3>
                 <Bars data={hist.data} x="week_start" tickFormatter={weekTick}
                   bars={[{ key: 'active_students', name: 'Белсенді оқушылар' }, { key: 'tasks_done', name: 'Тапсырылған тапсырмалар' }, { key: 'qa_completed', name: 'Қаралған видео' }]} />
               </Card>

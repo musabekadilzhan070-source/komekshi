@@ -44,15 +44,15 @@ export function CuratorPicker({ selected, onSelect }: { selected: string | null;
             onClick={() => onSelect(c.id)}
             className={clsx(
               'flex w-full items-center gap-3 rounded-3xl border-2 p-3 text-left transition-all',
-              selected === c.id ? 'border-berry-700 bg-berry-50' : 'border-line bg-white hover:border-berry-300',
+              selected === c.id ? 'border-navy-700 bg-navy-50' : 'border-line bg-white hover:border-navy-300',
             )}
           >
             <Avatar name={c.full_name} size={44} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-bold text-berry-900">{c.full_name}</span>
+              <span className="block truncate font-bold text-navy-900">{c.full_name}</span>
               <span className="block text-xs text-muted">{c.student_count} оқушы{c.bio ? ` · ${c.bio}` : ''}</span>
             </span>
-            <span className={clsx('flex size-6 shrink-0 items-center justify-center rounded-full border-2', selected === c.id ? 'border-berry-700 bg-berry-700 text-white' : 'border-berry-200')}>
+            <span className={clsx('flex size-6 shrink-0 items-center justify-center rounded-full border-2', selected === c.id ? 'border-navy-700 bg-navy-700 text-white' : 'border-navy-200')}>
               {selected === c.id && <Check className="size-3.5" />}
             </span>
           </button>

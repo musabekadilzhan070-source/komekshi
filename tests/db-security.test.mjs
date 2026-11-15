@@ -216,9 +216,10 @@ test('тапсырмалар: бірнеше оқушыға беру, стату
 });
 
 test('апталық трекер: прогресс, тек оқушы толтырады', async () => {
-  const today = new Date();
-  const dow = (today.getUTCDay() + 6) % 7;
-  const monday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - dow)).toISOString().slice(0, 10);
+  // Платформа Алматы уақытымен жұмыс істейді (kz_today) — аптаны да солай есептейміз
+  const kz = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Almaty' }));
+  const dow = (kz.getDay() + 6) % 7;
+  const monday = new Date(Date.UTC(kz.getFullYear(), kz.getMonth(), kz.getDate() - dow)).toISOString().slice(0, 10);
   const items = [
     { category: 'topic', title: 'Туынды' },
     { category: 'topic', title: 'Интеграл' },

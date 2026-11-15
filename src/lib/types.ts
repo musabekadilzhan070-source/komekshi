@@ -45,6 +45,15 @@ export interface Plan {
   updated_at: string;
 }
 
+export type TaskKind = 'written' | 'questions' | 'essay' | 'table' | 'file_upload' | 'external_link' | 'video' | 'reading' | 'test';
+export type QuestionType = 'single' | 'multiple' | 'matching' | 'ordering' | 'context' | 'image';
+
+export interface TaskConfig {
+  questions?: string[];
+  columns?: string[];
+  rows?: number;
+}
+
 export interface Task {
   id: string;
   curator_id: string | null;
@@ -55,6 +64,94 @@ export interface Task {
   due_date: string;
   priority: Priority;
   created_at: string;
+  kind: TaskKind;
+  external_url: string | null;
+  config: TaskConfig;
+  time_limit_minutes: number | null;
+}
+
+export interface StoredFile {
+  id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+}
+
+export interface Opt { id: string; text: string }
+
+/** Куратор редакторындағы сұрақ (жауап кілтімен) */
+export interface QuestionDraft {
+  key: string;
+  qtype: QuestionType;
+  prompt: string;
+  context_text: string;
+  image_path: string | null;
+  options: Opt[];
+  left: Opt[];
+  right: Opt[];
+  correct: string[];
+  pairs: Record<string, string>;
+  explanation: string;
+  points: number;
+}
+
+/** Оқушыға берілетін сұрақ (жауапсыз) */
+export interface RunnerQuestion {
+  id: string;
+  qtype: QuestionType;
+  prompt: string;
+  context_text: string | null;
+  image_path: string | null;
+  points: number;
+  options: Opt[] | { left: Opt[]; right: Opt[] };
+}
+
+export interface TestStart {
+  attempt_no: number;
+  started_at: string;
+  server_now: string;
+  time_limit_minutes: number | null;
+  questions: RunnerQuestion[];
+}
+
+export interface TestResultItem {
+  id: string;
+  qtype: QuestionType;
+  prompt: string;
+  context_text: string | null;
+  image_path: string | null;
+  options: Opt[] | { left: Opt[]; right: Opt[] };
+  answer: { correct?: string | string[]; order?: string[]; pairs?: Record<string, string> };
+  explanation: string | null;
+  points: number;
+  given: unknown;
+  earned: number;
+}
+
+export interface TestResult {
+  attempt_no: number;
+  started_at: string;
+  finished_at: string | null;
+  duration_seconds?: number;
+  late?: boolean;
+  score?: number;
+  max_score?: number;
+  items?: TestResultItem[];
+}
+
+export interface TestAttempt {
+  id: string;
+  submission_id: string;
+  task_id: string;
+  student_id: string;
+  attempt_no: number;
+  started_at: string;
+  finished_at: string | null;
+  score: number | null;
+  max_score: number | null;
+  late: boolean;
 }
 
 export interface Submission {
@@ -68,6 +165,8 @@ export interface Submission {
   submitted_at: string | null;
   reviewed_at: string | null;
   updated_at: string;
+  answer_text: string | null;
+  answer_data: { answers?: string[]; cells?: string[][]; done?: boolean } | null;
   tasks?: Task;
   profiles?: { full_name: string };
 }

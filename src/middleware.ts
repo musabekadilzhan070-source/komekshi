@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
   const section = PROTECTED.find((p) => path === p || path.startsWith(p + '/'));
-  const isAuthPage = path === '/login' || path === '/register';
+  const isAuthPage = path === '/login' || path === '/register' || path === '/organizer-login';
   const isPending = path === '/pending';
 
   const redirect = (to: string) => {

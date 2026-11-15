@@ -95,23 +95,23 @@ export function ReportList({
             <button key={r.id} onClick={() => setOpen(r)} className="card flex flex-col p-4 text-left transition-shadow hover:shadow-lift sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-berry-100 text-berry-700"><BookOpen className="size-5" /></span>
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-navy-100 text-navy-700"><BookOpen className="size-5" /></span>
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-berry-900">{r.book_title}</p>
+                    <p className="truncate font-bold text-navy-900">{r.book_title}</p>
                     <p className="text-xs text-muted">{r.section || r.publisher || 'Бөлім көрсетілмеген'}</p>
                   </div>
                 </div>
                 <Badge tone={REPORT_STATUS[r.status].tone}>{REPORT_STATUS[r.status].label}</Badge>
               </div>
               {mode === 'curator' && names && (
-                <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-berry-700"><Avatar name={names.get(r.student_id) ?? '?'} size={20} />{names.get(r.student_id) ?? 'Оқушы'}</p>
+                <p className="mt-2 flex items-center gap-2 text-xs font-semibold text-navy-700"><Avatar name={names.get(r.student_id) ?? '?'} size={20} />{names.get(r.student_id) ?? 'Оқушы'}</p>
               )}
               <p className="mt-2 line-clamp-2 text-sm text-muted">{r.summary}</p>
               <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
                 <Badge>{r.pages_read} бет</Badge>
                 <Badge>{minutesLabel(r.minutes_spent)}</Badge>
                 <Badge>{shortDate(r.read_date)}</Badge>
-                {r.curator_comment && <Badge tone="berry"><MessageSquare className="size-3" /> Пікір</Badge>}
+                {r.curator_comment && <Badge tone="navy"><MessageSquare className="size-3" /> Пікір</Badge>}
               </div>
             </button>
           ))}
@@ -189,8 +189,8 @@ function ReportModal({
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{r.summary}</p>
         </section>
         {r.reflection && (
-          <section className="rounded-2xl bg-berry-50 p-4">
-            <h4 className="mb-1 text-xs font-bold tracking-wide text-berry-700 uppercase">Өз түсінігі / пікірі</h4>
+          <section className="rounded-2xl bg-navy-50 p-4">
+            <h4 className="mb-1 text-xs font-bold tracking-wide text-navy-700 uppercase">Өз түсінігі / пікірі</h4>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{r.reflection}</p>
           </section>
         )}

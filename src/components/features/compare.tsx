@@ -21,13 +21,13 @@ export function StudentComparison({ students, linkBase }: { students: StudentOve
     <div className="space-y-4">
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="p-4 sm:p-5">
-          <h3 className="mb-2 text-sm font-bold text-berry-900">Апталық трекер және тапсырмалар орындалуы, %</h3>
+          <h3 className="mb-2 text-sm font-bold text-navy-900">Апталық трекер және тапсырмалар орындалуы, %</h3>
           <Bars data={rows} x="short" layout="vertical" height={h} unit="%"
             bars={[{ key: 'week_progress', name: 'Апталық трекер' }, { key: 'tasks_pct', name: 'Тапсырмалар' }]} />
         </Card>
         <Card className="p-4 sm:p-5">
-          <h3 className="mb-2 text-sm font-bold text-berry-900">Оқылған беттер</h3>
-          <Bars data={rows} x="short" layout="vertical" height={h} unit=" бет" bars={[{ key: 'pages_total', name: 'Беттер', color: '#8C1C3C' }]} />
+          <h3 className="mb-2 text-sm font-bold text-navy-900">Оқылған беттер</h3>
+          <Bars data={rows} x="short" layout="vertical" height={h} unit=" бет" bars={[{ key: 'pages_total', name: 'Беттер', color: '#3A5BA8' }]} />
         </Card>
       </div>
       <Card className="overflow-hidden">
@@ -46,11 +46,11 @@ export function StudentComparison({ students, linkBase }: { students: StudentOve
             </thead>
             <tbody>
               {rows.map((s) => (
-                <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-berry-50/50">
+                <tr key={s.id} className="border-b border-line/60 last:border-0 hover:bg-navy-50/50">
                   <td className="px-4 py-3">
                     {linkBase ? (
-                      <Link href={`${linkBase}/${s.id}`} className="flex items-center gap-2 font-semibold text-berry-900 hover:underline"><Avatar name={s.full_name} size={28} />{s.full_name}</Link>
-                    ) : <span className="flex items-center gap-2 font-semibold text-berry-900"><Avatar name={s.full_name} size={28} />{s.full_name}</span>}
+                      <Link href={`${linkBase}/${s.id}`} className="flex items-center gap-2 font-semibold text-navy-900 hover:underline"><Avatar name={s.full_name} size={28} />{s.full_name}</Link>
+                    ) : <span className="flex items-center gap-2 font-semibold text-navy-900"><Avatar name={s.full_name} size={28} />{s.full_name}</span>}
                   </td>
                   <td className="px-3 py-3"><div className="flex items-center gap-2"><ProgressBar value={s.week_progress} className="w-20" /><span className="text-xs font-bold">{s.week_progress == null ? '—' : `${s.week_progress}%`}</span></div></td>
                   <td className="px-3 py-3 text-xs"><b>{s.tasks_pct == null ? '—' : `${s.tasks_pct}%`}</b> <span className="text-muted">({s.tasks_accepted}/{s.tasks_total})</span></td>

@@ -9,6 +9,7 @@ import { useAccount } from '@/components/shell/account-context';
 import { useMyStudents } from '@/components/features/students';
 import { AreaTrend } from '@/components/features/charts';
 import { Avatar, Badge, Card, EmptyState, LoadingBlock, ProgressBar, SectionTitle, StatCard } from '@/components/ui/misc';
+import { Ornament } from '@/components/ui/ornament';
 
 const DONE_THRESHOLD = 80;
 
@@ -40,10 +41,10 @@ export default function CuratorHome() {
 
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-[28px] bg-berry-900 p-5 text-white sm:p-7">
-        <div className="pointer-events-none absolute -top-20 -right-10 size-72 rounded-full bg-berry-700/55" />
+      <section className="relative overflow-hidden rounded-[28px] bg-navy-900 p-5 text-white sm:p-7">
+        <Ornament kind="koshkar" className="absolute -top-10 -right-10 size-60 text-mist/[0.07] sm:size-72" strokeWidth={1.4} />
         <div className="relative">
-          <p className="text-sm text-berry-200">{longDate(todayISO())}</p>
+          <p className="text-sm text-mist/70">{longDate(todayISO())}</p>
           <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">Қайырлы күн, {me.full_name.split(' ')[0]}!</h1>
           <p className="mt-2 max-w-xl text-sm text-white/75">
             {e && (e.requests + e.reviews + e.reports) > 0
@@ -66,7 +67,7 @@ export default function CuratorHome() {
 
       <div className="grid gap-5 2xl:grid-cols-[1.3fr_1fr]">
         <Card className="p-4 sm:p-6">
-          <SectionTitle title="Топтың апталық прогресі" subtitle="Оқушылардың орташа трекер прогресі, %" action={<Link href="/curator/stats" className="text-sm font-semibold text-berry-700 hover:underline">Статистика</Link>} />
+          <SectionTitle title="Топтың апталық прогресі" subtitle="Оқушылардың орташа трекер прогресі, %" action={<Link href="/curator/stats" className="text-sm font-semibold text-navy-700 hover:underline">Статистика</Link>} />
           {extra.loading ? <LoadingBlock rows={2} /> : e?.history.some((h) => h.avg_progress != null)
             ? <AreaTrend data={e.history} x="week_start" y="avg_progress" name="Орташа прогресс" unit="%" max={100} />
             : <EmptyState icon={TrendingUp} title="Әзірге деректер жоқ" text="Трекер тағайындалып, оқушылар толтыра бастағанда график пайда болады." />}
@@ -79,10 +80,10 @@ export default function CuratorHome() {
             <ul className="space-y-2">
               {attention.map(({ s }) => (
                 <li key={s.id}>
-                  <Link href={`/curator/students/${s.id}`} className="flex items-center gap-3 rounded-2xl p-2.5 transition-colors hover:bg-berry-50">
+                  <Link href={`/curator/students/${s.id}`} className="flex items-center gap-3 rounded-2xl p-2.5 transition-colors hover:bg-navy-50">
                     <Avatar name={s.full_name} size={38} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-berry-900">{s.full_name}</p>
+                      <p className="truncate text-sm font-bold text-navy-900">{s.full_name}</p>
                       <div className="mt-1 flex items-center gap-2"><ProgressBar value={s.week_progress} className="max-w-32" /><span className="text-[11px] text-muted">{s.week_total ? `${s.week_progress}%` : 'трекер жоқ'}</span></div>
                     </div>
                     {s.tasks_overdue > 0 ? <Badge tone="bad"><AlertTriangle className="size-3" /> {s.tasks_overdue}</Badge> : <span className="text-[11px] text-muted">{relativeTime(s.last_active_at)}</span>}

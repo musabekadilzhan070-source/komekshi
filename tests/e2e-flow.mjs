@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const SHOTS = process.env.SHOTS || './.shots';
-const ORG = { email: process.env.ORG_EMAIL || 'admin@komekshi.kz', password: process.env.ORG_PASSWORD || 'Komekshi2026' };
+const ORG_CODE = process.env.ORG_CODE;
+if (!ORG_CODE) throw new Error('ORG_CODE (организатор коды) орта айнымалысы керек');
 const run = Date.now().toString(36).slice(-5);
 const CUR = { name: 'Қанат Құрманғазы', email: `kanat.${run}@mail.kz`, password: 'Kurator2026', contact: '+7 701 555 12 34' };
 const STU = { name: 'Аружан Әбілқасымова', email: `aruzhan.${run}@mail.kz`, password: 'Oqushy2026' };
@@ -68,9 +69,28 @@ await step('Куратор тіркеледі → күту беті', async () =
 });
 
 O = await ctx();
-await step('Организатор куратор өтінішін қабылдайды', async () => {
-  await login(O.p, ORG);
+await step('Организатор кабинетіне код арқылы кіру (қате код → хабарлама)', async () => {
+  await O.p.goto(`${BASE}/login`);
+  await O.p.getByRole('link', { name: 'Организатор кабинетіне кіру' }).click();
+  await O.p.waitForURL('**/organizer-login');
+  await O.p.getByRole('heading', { name: 'Организатор кабинетіне кіру' }).waitFor();
+  // код беттің бастапқы кодында жоқ
+  assert.ok(!(await O.p.content()).includes(ORG_CODE), 'код HTML-де көрінбеуі керек');
+  await O.p.getByLabel('Кіру коды').fill('111111');
+  await O.p.getByRole('button', { name: 'Кіру' }).click();
+  await O.p.getByText('Қате код. Қайталап көріңіз').waitFor();
+  await shot(O.p, '04a-organizer-code-wrong');
+  // кірмеген адам кабинетке өте алмайды
+  await O.p.goto(`${BASE}/organizer`);
+  await O.p.waitForURL('**/login');
+  await O.p.goto(`${BASE}/organizer-login`);
+  await O.p.getByLabel('Кіру коды').fill(ORG_CODE);
+  await O.p.getByRole('button', { name: 'Кіру' }).click();
   await O.p.waitForURL('**/organizer');
+  await O.p.getByText('Жалпы оқушылар').waitFor();
+});
+
+await step('Организатор куратор өтінішін қабылдайды', async () => {
   await O.p.goto(`${BASE}/organizer/requests`);
   await O.p.getByText(CUR.name, { exact: true }).first().waitFor();
   await shot(O.p, '04-organizer-requests');
@@ -186,7 +206,7 @@ await step('Куратор тапсырма береді', async () => {
   await A.p.goto(`${BASE}/curator/tasks`);
   await A.p.getByRole('button', { name: /Жаңа тапсырма/ }).click();
   await A.p.getByLabel(/Тапсырма атауы/).fill('Геометрия: үшбұрыштар');
-  await A.p.getByLabel(/Толық сипаттамасы/).fill('Үшбұрыш теңдігінің белгілері');
+  await A.p.getByLabel(/^Сипаттамасы/).fill('Үшбұрыш теңдігінің белгілері');
   await A.p.getByLabel(/Орындау нұсқаулығы/).fill('1) Теорияны оқу 2) 12 есеп шығару');
   await A.p.getByRole('button', { name: 'Барлығын таңдау' }).click();
   await A.p.getByRole('dialog').getByRole('button', { name: /Тапсырма беру/ }).click();
@@ -196,6 +216,7 @@ await step('Куратор тапсырма береді', async () => {
 await step('Оқушы тапсырманы орындап жібереді → куратор қабылдайды', async () => {
   await S.p.goto(`${BASE}/student/tasks`);
   await S.p.locator('main').getByText('Геометрия: үшбұрыштар').first().click();
+  await S.p.getByLabel('Менің жауабым').fill('1) АВС = DEF, себебі екі қабырғасы мен арасындағы бұрышы тең');
   await S.p.getByLabel(/түсініктеме/).fill('Барлық 12 есепті шығардым');
   await shot(S.p, '13-student-task-modal');
   await S.p.getByRole('button', { name: 'Орындалды' }).click();
@@ -206,6 +227,172 @@ await step('Оқушы тапсырманы орындап жібереді → 
   await A.p.getByLabel('Оқушыға пікір').fill('Жарайсың!');
   await A.p.getByRole('dialog').getByRole('button', { name: 'Қабылдау' }).click();
   await toast(A.p, /Тапсырма қабылданды/);
+});
+
+await step('Куратор тест құрастырады: 6 сұрақ түрі, материал (PDF), уақыт', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('button', { name: /Жаңа тапсырма/ }).click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('kind-test').click();
+  await d.getByLabel(/Тапсырма атауы/).fill('Қазақ тарихы: бақылау тесті');
+  await d.getByLabel(/^Сипаттамасы/).fill('Қазақ хандығы кезеңі');
+  await d.locator('input[type=file]').setInputFiles('./tests/fixtures/sabak.pdf');
+  await d.getByText('sabak.pdf').waitFor();
+  await d.getByTestId('open-builder').click();
+  const b = A.p.getByRole('dialog').last();
+  await b.getByLabel('Тест уақыты (минут)').fill('15');
+  const card = (i) => b.getByTestId('question-card').nth(i);
+  // 1. Бір дұрыс жауап
+  await b.getByTestId('add-q-single').click();
+  await card(0).getByLabel(/Сұрақ мәтіні/).fill('Қазақ хандығы қай жылы құрылды?');
+  for (const [i, v] of ['1465', '1511', '1731', '1825'].entries()) await card(0).getByPlaceholder(`${i + 1}-нұсқа`).fill(v);
+  await card(0).getByRole('button', { name: '1-нұсқаны дұрыс деп белгілеу' }).click();
+  await card(0).getByLabel(/Түсіндірме/).fill('Керей мен Жәнібек 1465 жылы хандық құрды.');
+  // 2. Бірнеше дұрыс жауап
+  await b.getByTestId('add-q-multiple').click();
+  await card(1).getByLabel(/Сұрақ мәтіні/).fill('Қазақ хандары кімдер?');
+  for (const [i, v] of ['Абылай', 'Тәуке', 'Шыңғыс', 'Наполеон'].entries()) await card(1).getByPlaceholder(`${i + 1}-нұсқа`).fill(v);
+  await card(1).getByRole('button', { name: '1-нұсқаны дұрыс деп белгілеу' }).click();
+  await card(1).getByRole('button', { name: '2-нұсқаны дұрыс деп белгілеу' }).click();
+  // 3. Сәйкестендіру
+  await b.getByTestId('add-q-matching').click();
+  await card(2).getByLabel(/Сұрақ мәтіні/).fill('Тұлға мен еңбегін сәйкестендіріңіз');
+  await card(2).getByPlaceholder('1. Сол жақ').fill('Абай');
+  await card(2).getByPlaceholder('2. Сол жақ').fill('Шоқан');
+  await card(2).getByPlaceholder('Сәйкес жауап').nth(0).fill('Қара сөздер');
+  await card(2).getByPlaceholder('Сәйкес жауап').nth(1).fill('Жоңғария очерктері');
+  // 4. Хронология
+  await b.getByTestId('add-q-ordering').click();
+  await card(3).getByLabel(/Сұрақ мәтіні/).fill('Оқиғаларды хронологиялық ретпен орналастырыңыз');
+  await card(3).getByPlaceholder('1-оқиға / элемент').fill('Қазақ хандығының құрылуы');
+  await card(3).getByPlaceholder('2-оқиға / элемент').fill('Тәуке ханның «Жеті жарғысы»');
+  await card(3).getByPlaceholder('3-оқиға / элемент').fill('Аңырақай шайқасы');
+  // 5. Мәтінге негізделген
+  await b.getByTestId('add-q-context').click();
+  await card(4).getByLabel(/Оқылатын мәтін/).fill('Аңырақай шайқасы 1730 жылы болды. Қазақ жасағы жоңғарларды жеңді.');
+  await card(4).getByLabel(/Сұрақ мәтіні/).fill('Мәтін бойынша шайқаста кім жеңді?');
+  for (const [i, v] of ['Қазақтар', 'Жоңғарлар', 'Қытай', 'Ешкім'].entries()) await card(4).getByPlaceholder(`${i + 1}-нұсқа`).fill(v);
+  await card(4).getByRole('button', { name: '1-нұсқаны дұрыс деп белгілеу' }).click();
+  // 6. Суретке негізделген
+  await b.getByTestId('add-q-image').click();
+  await card(5).locator('input[type=file]').setInputFiles('./tests/fixtures/karta.png');
+  await card(5).getByRole('img', { name: 'Сұрақ суреті' }).waitFor({ timeout: 15000 });
+  await card(5).getByLabel(/Сұрақ мәтіні/).fill('Суреттегі түс қандай?');
+  for (const [i, v] of ['Қою көк', 'Қызыл', 'Жасыл', 'Сары'].entries()) await card(5).getByPlaceholder(`${i + 1}-нұсқа`).fill(v);
+  await card(5).getByRole('button', { name: '1-нұсқаны дұрыс деп белгілеу' }).click();
+  // ретін ауыстыру: 6-сұрақты бір орын жоғары, қайта төмен
+  await card(5).getByRole('button', { name: 'Жоғары жылжыту' }).click();
+  await card(4).getByRole('button', { name: 'Төмен жылжыту' }).click();
+  await shot(A.p, '13a-test-builder');
+  await b.getByTestId('test-save').click();
+  await d.getByTestId('test-summary').getByText('6 сұрақ · 6 ұпай').waitFor();
+  await d.getByRole('button', { name: 'Барлығын таңдау' }).click();
+  await shot(A.p, '13b-task-editor');
+  await d.getByTestId('task-save').click();
+  await toast(A.p, /Тапсырма 1 оқушыға берілді/);
+});
+
+await step('Оқушы материалды ашады, тест тапсырады, нәтижесін көреді', async () => {
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().click();
+  const d = S.p.getByRole('dialog');
+  await d.getByText('sabak.pdf').waitFor();
+  await d.getByRole('button', { name: 'sabak.pdf ашу' }).click();
+  await S.p.getByRole('dialog').last().locator('iframe').waitFor();
+  await shot(S.p, '13c-student-pdf-preview');
+  await S.p.keyboard.press('Escape');
+  await d.getByTestId('start-test').click();
+  const r = S.p.getByRole('dialog').last();
+  await r.getByRole('timer').waitFor();
+  const q = () => r.getByTestId('runner-question');
+  // 1
+  await q().getByRole('radio', { name: /1465/ }).click();
+  await r.getByTestId('next-q').click();
+  // 2
+  await q().getByRole('checkbox', { name: /Абылай/ }).click();
+  await q().getByRole('checkbox', { name: /Тәуке/ }).click();
+  await r.getByTestId('next-q').click();
+  // 3
+  await q().getByLabel('Абай — сәйкес жауап').selectOption({ label: 'Қара сөздер' });
+  await q().getByLabel('Шоқан — сәйкес жауап').selectOption({ label: 'Жоңғария очерктері' });
+  await shot(S.p, '13d-student-test-matching');
+  await r.getByTestId('next-q').click();
+  // 4 — дұрыс ретке келтіру
+  const want = ['Қазақ хандығының құрылуы', 'Тәуке ханның «Жеті жарғысы»', 'Аңырақай шайқасы'];
+  for (let i = 0; i < want.length; i++) {
+    for (let guard = 0; guard < 5; guard++) {
+      const texts = await q().getByTestId('order-item').allInnerTexts();
+      const pos = texts.findIndex((t) => t.includes(want[i]));
+      if (pos <= i) break;
+      await q().getByRole('button', { name: `${want[i]} — жоғары` }).click();
+    }
+  }
+  await r.getByTestId('next-q').click();
+  // 5 — мәтін
+  await q().getByText(/Аңырақай шайқасы 1730 жылы/).waitFor();
+  await q().getByRole('radio', { name: /Қазақтар/ }).click();
+  await r.getByTestId('next-q').click();
+  // 6 — сурет: әдейі қате жауап
+  await q().getByRole('img', { name: 'Сұрақ суреті' }).waitFor({ timeout: 15000 });
+  await q().getByRole('radio', { name: /Қызыл/ }).click();
+  await shot(S.p, '13e-student-test-image');
+  await r.getByTestId('finish-test').click();
+  await r.getByTestId('test-score').getByText('5 / 6 ұпай').waitFor({ timeout: 15000 });
+  await r.getByText('Керей мен Жәнібек 1465 жылы хандық құрды.').waitFor();
+  await shot(S.p, '13f-student-test-result');
+  await r.getByRole('button', { name: 'Жабу' }).last().click();
+});
+
+await step('Бетті жаңартқанда тест нәтижесі сақталады; куратор нәтижені көріп қабылдайды', async () => {
+  await S.p.reload();
+  await S.p.getByRole('tab', { name: /Тексеруді күтуде/ }).click();
+  await S.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().waitFor();
+  await S.p.locator('main').getByText('5/6 · 83%').waitFor();
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('test-score').getByText('5 / 6 ұпай').waitFor();
+  await shot(A.p, '13g-curator-test-review');
+  await d.getByTestId('accept-task').click();
+  await toast(A.p, /Тапсырма қабылданды/);
+});
+
+await step('Кесте толтыру тапсырмасы: оқушы кестені толтырып, файл жібереді → куратор көреді', async () => {
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.getByRole('button', { name: /Жаңа тапсырма/ }).click();
+  const d = A.p.getByRole('dialog');
+  await d.getByTestId('kind-table').click();
+  await d.getByLabel(/Тапсырма атауы/).fill('Хандар кестесі');
+  await d.getByLabel('1-баған атауы').fill('Хан');
+  await d.getByLabel('2-баған атауы').fill('Билік жылдары');
+  await d.getByLabel('Жол саны').fill('2');
+  await d.getByRole('button', { name: 'Барлығын таңдау' }).click();
+  await d.getByTestId('task-save').click();
+  await toast(A.p, /Тапсырма 1 оқушыға берілді/);
+
+  await S.p.goto(`${BASE}/student/tasks`);
+  await S.p.getByRole('tab', { name: /Орындалатын/ }).click();
+  await S.p.locator('main').getByText('Хандар кестесі').first().click();
+  const s = S.p.getByRole('dialog');
+  await s.getByLabel('1-жол, Хан').fill('Абылай');
+  await s.getByLabel('1-жол, Билік жылдары').fill('1771–1781');
+  await s.getByLabel('2-жол, Хан').fill('Тәуке');
+  await s.getByLabel('2-жол, Билік жылдары').fill('1680–1715');
+  await s.getByTestId('save-draft').click();
+  await toast(S.p, /Жауап сақталды/);
+  await s.locator('input[type=file]').setInputFiles('./tests/fixtures/karta.png');
+  await s.getByText('karta.png').waitFor({ timeout: 15000 });
+  await shot(S.p, '13h-student-table');
+  await s.getByTestId('submit-work').click();
+  await toast(S.p, /тексеруіне жіберілді/);
+
+  await A.p.goto(`${BASE}/curator/tasks`);
+  await A.p.locator('main').getByText('Хандар кестесі').first().click();
+  const c = A.p.getByRole('dialog');
+  await c.getByText('1771–1781').waitFor();
+  await c.getByText('karta.png').waitFor();
+  await shot(A.p, '13i-curator-table-review');
+  await c.getByRole('button', { name: 'Жабу' }).first().click();
 });
 
 await step('Куратор апталық трекер құрады және тағайындайды', async () => {
@@ -361,6 +548,13 @@ await step('Мобильді нұсқа: оқушы кабинеті', async () 
     assert.ok(o <= 0, `/student/${path}: горизонталь айналдыру ${o}px`);
     await shot(M.p, `26-mobile-${path}`);
   }
+  await M.p.goto(`${BASE}/student/tasks`);
+  await M.p.getByRole('tab', { name: /Барлығы/ }).click();
+  await M.p.locator('main').getByText('Қазақ тарихы: бақылау тесті').first().click();
+  await M.p.getByTestId('test-result').waitFor();
+  await M.p.waitForTimeout(500);
+  await shot(M.p, '26-mobile-test-result');
+  await M.p.keyboard.press('Escape');
   await M.p.getByRole('button', { name: 'Мәзір' }).click();
   await M.p.waitForTimeout(400);
   await shot(M.p, '27-mobile-menu');

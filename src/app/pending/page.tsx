@@ -67,7 +67,7 @@ export default function PendingPage() {
   if (acc === null) {
     return (
       <AuthFrame>
-        <h1 className="text-2xl font-extrabold text-berry-900">Профиль табылмады</h1>
+        <h1 className="text-2xl font-extrabold text-navy-900">Профиль табылмады</h1>
         <p className="mt-2 text-sm text-muted">Бұл аккаунтқа платформа профилі тағайындалмаған. Ұйымдастырушыға хабарласыңыз.</p>
         <Button className="mt-6" variant="secondary" onClick={logout}><LogOut className="size-4" /> Шығу</Button>
       </AuthFrame>
@@ -90,17 +90,17 @@ export default function PendingPage() {
 
   return (
     <AuthFrame aside={<AuthAside title="Өтінішіңіздің күйі" text="Өтініш мақұлданған сәтте бұл бет автоматты түрде жаңарады." />}>
-      <p className="text-xs font-semibold tracking-wide text-berry-700 uppercase">{ROLE_LABEL[acc.role]} · {acc.full_name}</p>
+      <p className="text-xs font-semibold tracking-wide text-navy-700 uppercase">{ROLE_LABEL[acc.role]} · {acc.full_name}</p>
 
       {status === 'blocked' ? (
         <>
           <div className="mt-4 mb-4 flex size-14 items-center justify-center rounded-3xl bg-mist text-muted"><Ban className="size-7" /></div>
-          <h1 className="text-2xl font-extrabold text-berry-900">Аккаунт уақытша бұғатталған</h1>
+          <h1 className="text-2xl font-extrabold text-navy-900">Аккаунт уақытша бұғатталған</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">Толығырақ ақпарат алу үшін ұйымдастырушыға немесе кураторыңызға хабарласыңыз.</p>
         </>
       ) : (
         <>
-          <h1 className="mt-2 text-2xl font-extrabold text-berry-900">
+          <h1 className="mt-2 text-2xl font-extrabold text-navy-900">
             {status === 'pending' && 'Өтінішіңіз қарастырылуда'}
             {status === 'rejected' && 'Өтінішіңіз қабылданбады'}
             {status === 'active' && 'Өтінішіңіз қабылданды!'}
@@ -117,14 +117,14 @@ export default function PendingPage() {
                 <div className="flex flex-col items-center">
                   <span className={clsx(
                     'flex size-8 items-center justify-center rounded-full',
-                    s.bad ? 'bg-bad-soft text-bad' : s.done ? 'bg-berry-700 text-white' : s.active ? 'bg-warn-soft text-warn' : 'bg-mist text-muted',
+                    s.bad ? 'bg-bad-soft text-bad' : s.done ? 'bg-navy-700 text-white' : s.active ? 'bg-warn-soft text-warn' : 'bg-mist text-muted',
                   )}>
                     {s.bad ? <XCircle className="size-4" /> : s.done ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />}
                   </span>
-                  {i < steps.length - 1 && <span className={clsx('my-1 w-0.5 flex-1 rounded', s.done ? 'bg-berry-300' : 'bg-line')} style={{ minHeight: 20 }} />}
+                  {i < steps.length - 1 && <span className={clsx('my-1 w-0.5 flex-1 rounded', s.done ? 'bg-navy-300' : 'bg-line')} style={{ minHeight: 20 }} />}
                 </div>
                 <div className="pb-4">
-                  <p className={clsx('text-sm font-bold', s.bad ? 'text-bad' : 'text-berry-900')}>{s.label}</p>
+                  <p className={clsx('text-sm font-bold', s.bad ? 'text-bad' : 'text-navy-900')}>{s.label}</p>
                   {s.at && <p className="text-xs text-muted">{dateTime(s.at)}</p>}
                   {s.active && <p className="text-xs text-warn">Күтуде…</p>}
                 </div>
@@ -140,7 +140,7 @@ export default function PendingPage() {
 
           {status === 'rejected' && reqStatus === 'rejected' && (
             <div className="mt-2 space-y-4 rounded-3xl bg-white p-4 ring-1 ring-line">
-              <p className="flex items-center gap-2 text-sm font-bold text-berry-900"><RotateCcw className="size-4" /> Қайта өтініш жіберу</p>
+              <p className="flex items-center gap-2 text-sm font-bold text-navy-900"><RotateCcw className="size-4" /> Қайта өтініш жіберу</p>
               {acc.role === 'student' ? (
                 <CuratorPicker selected={curator} onSelect={setCurator} />
               ) : (
@@ -155,7 +155,7 @@ export default function PendingPage() {
         </>
       )}
 
-      <button onClick={logout} className="mt-6 inline-flex items-center gap-2 self-start text-sm font-semibold text-muted hover:text-berry-900">
+      <button onClick={logout} className="mt-6 inline-flex items-center gap-2 self-start text-sm font-semibold text-muted hover:text-navy-900">
         <LogOut className="size-4" /> Шығу
       </button>
     </AuthFrame>

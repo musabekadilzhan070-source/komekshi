@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   return (
     <AuthFrame aside={<AuthAside title="Қайта оралғаныңызға қуаныштымыз" text="Жеке оқу кеңістігіңізге кіріп, бүгінгі жоспар мен тапсырмаларыңызды жалғастырыңыз." />}>
-      <h1 className="text-3xl font-extrabold tracking-tight text-berry-900">Кіру</h1>
+      <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">Кіру</h1>
       <p className="mt-2 text-sm text-muted">Электронды пошта мен құпиясөзіңізді енгізіңіз.</p>
       <form onSubmit={submit} className="mt-8 space-y-4">
         <Field label="Электронды пошта">
@@ -44,7 +44,7 @@ export default function LoginPage() {
         <Field label="Құпиясөз">
           <div className="relative">
             <Input type={show ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="pr-12" />
-            <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Құпиясөзді жасыру' : 'Құпиясөзді көрсету'} className="absolute inset-y-0 right-3 my-auto flex size-8 items-center justify-center rounded-full text-muted hover:bg-berry-50">
+            <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Құпиясөзді жасыру' : 'Құпиясөзді көрсету'} className="absolute inset-y-0 right-3 my-auto flex size-8 items-center justify-center rounded-full text-muted hover:bg-navy-50">
               {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
@@ -53,7 +53,10 @@ export default function LoginPage() {
         <Button type="submit" size="lg" className="w-full" loading={loading}><LogIn className="size-4" /> Кіру</Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
-        Аккаунтыңыз жоқ па? <Link href="/register" className="font-bold text-berry-700 hover:underline">Тіркелу</Link>
+        Аккаунтыңыз жоқ па? <Link href="/register" className="font-bold text-navy-700 hover:underline">Тіркелу</Link>
+      </p>
+      <p className="mt-3 text-center text-xs text-muted">
+        <Link href="/organizer-login" className="font-semibold text-muted hover:text-navy-900 hover:underline">Организатор кабинетіне кіру</Link>
       </p>
     </AuthFrame>
   );
